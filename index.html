@@ -367,6 +367,64 @@
   .status-tag.ressalva { background: var(--warn-bg); color: var(--warn); }
   .status-tag.bloqueado { background: var(--bad-bg); color: var(--bad); }
 
+  
+  /* Linha Guia da Assinatura e Overlay de Rotação */
+  .sig-guideline-layer {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    pointer-events: none; user-select: none; z-index: 1; padding: 0 30px;
+    transition: opacity .25s ease;
+  }
+  .sig-guideline-layer.signing { opacity: 0.35; }
+  .sig-guideline-center {
+    width: 100%; max-width: 650px; display: flex; flex-direction: column; align-items: stretch; margin-top: 35px;
+  }
+  .sig-guideline-top-text {
+    text-align: center; font-size: 11px; font-weight: 700; color: #64748b;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 45px; opacity: 0.7;
+  }
+  .sig-guideline-row {
+    display: flex; align-items: flex-end; gap: 10px; width: 100%;
+  }
+  .sig-guideline-x {
+    font-size: 22px; font-weight: 800; color: #475569; line-height: 1; font-family: system-ui, sans-serif;
+  }
+  .sig-guideline-stroke {
+    flex: 1; height: 2px; background: #64748b; border-bottom: 2px dashed #94a3b8;
+  }
+  .sig-guideline-sub {
+    text-align: center; font-size: 12px; font-weight: 700; color: #475569;
+    text-transform: uppercase; letter-spacing: 0.5px; margin-top: 8px;
+  }
+
+  .sig-rotate-overlay {
+    position: absolute; inset: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(6px);
+    display: none; align-items: center; justify-content: center; z-index: 10; padding: 20px; text-align: center;
+  }
+  .sig-rotate-overlay.show { display: flex; }
+  .sig-rotate-card {
+    background: #1e293b; border: 1px solid rgba(255,255,255,0.12); border-radius: 18px;
+    padding: 24px; max-width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); color: #fff;
+  }
+  .sig-phone-anim {
+    position: relative; width: 64px; height: 64px; margin: 0 auto 16px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  @keyframes phoneTurn {
+    0%, 15% { transform: rotate(0deg); }
+    45%, 70% { transform: rotate(-90deg); }
+    90%, 100% { transform: rotate(0deg); }
+  }
+  .phone-svg { animation: phoneTurn 3s infinite ease-in-out; }
+  .rotate-arrow-svg { position: absolute; right: -4px; top: -4px; opacity: 0.9; }
+  .sig-rotate-card h4 { margin: 0 0 6px; font-size: 16px; font-weight: 800; color: #fff; }
+  .sig-rotate-card p { margin: 0 0 16px; font-size: 13px; color: #94a3b8; line-height: 1.4; }
+  .btn-bypass-rotate {
+    background: rgba(255,255,255,0.1); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.2);
+    font-size: 12px; font-weight: 600; padding: 8px 14px; border-radius: 8px; cursor: pointer;
+    font-family: inherit; transition: background .2s;
+  }
+  .btn-bypass-rotate:hover { background: rgba(255,255,255,0.18); }
+
   /* Modais e Alertas */
   .modal-overlay {
     position: fixed; inset: 0; z-index: 80; background: rgba(0,0,0,0.6);
@@ -968,8 +1026,41 @@
     </button>
   </div>
 
-  <div class="sig-modal-body">
+  <div class="sig-modal-body" id="sigModalBody">
+    <!-- Linha Guia Visual Oficial de Assinatura -->
+    <div class="sig-guideline-layer" id="sigGuidelineLayer">
+      <div class="sig-guideline-center">
+        <div class="sig-guideline-top-text">Assine no espaço abaixo sobre a linha</div>
+        <div class="sig-guideline-row">
+          <span class="sig-guideline-x">✕</span>
+          <div class="sig-guideline-stroke"></div>
+        </div>
+        <div class="sig-guideline-sub" id="sigGuidelineSub">Escreva sobre a linha guia</div>
+      </div>
+    </div>
+
+    <!-- Canvas de Desenho -->
     <canvas id="sigCanvas"></canvas>
+
+    <!-- Overlay de Orientação (Gire o celular na horizontal) -->
+    <div class="sig-rotate-overlay" id="sigRotateOverlay">
+      <div class="sig-rotate-card">
+        <div class="sig-phone-anim">
+          <svg class="phone-svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+            <line x1="12" y1="18" x2="12.01" y2="18"/>
+          </svg>
+          <svg class="rotate-arrow-svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+          </svg>
+        </div>
+        <h4>Gire o celular na horizontal</h4>
+        <p>Para assinar na posição e proporção corretas do documento, deite o seu aparelho.</p>
+        <button type="button" class="btn-bypass-rotate" onclick="dismissRotateOverlay()">
+          Assinar em modo retrato
+        </button>
+      </div>
+    </div>
   </div>
 
   <div class="sig-modal-footer">
@@ -1144,13 +1235,16 @@ frm.addEventListener('input', () => {
   salvarRascunho();
 });
 
-// Modal de Assinatura em Modo Horizontal (Paisagem)
+// Modal de Assinatura em Modo Horizontal com Linha Guia e Detecção de Orientação
 const sigModal = document.getElementById('sigModal');
 const sigCanvas = document.getElementById('sigCanvas');
 const sigCtx = sigCanvas.getContext('2d');
 const orientHint = document.getElementById('orientHint');
+const sigGuidelineLayer = document.getElementById('sigGuidelineLayer');
+const sigRotateOverlay = document.getElementById('sigRotateOverlay');
 let isDrawing = false;
 let sigStrokeCount = 0;
+let rotateBypassed = false;
 
 function setupCanvasDimensions() {
   const rect = sigCanvas.parentElement.getBoundingClientRect();
@@ -1158,7 +1252,7 @@ function setupCanvasDimensions() {
   sigCanvas.width = rect.width * dpr;
   sigCanvas.height = rect.height * dpr;
   sigCtx.scale(dpr, dpr);
-  sigCtx.lineWidth = 2.5;
+  sigCtx.lineWidth = 2.6;
   sigCtx.lineCap = 'round';
   sigCtx.lineJoin = 'round';
   sigCtx.strokeStyle = '#0f172a';
@@ -1166,13 +1260,23 @@ function setupCanvasDimensions() {
 
 function checkOrientation() {
   const isLandscape = window.innerWidth > window.innerHeight;
-  if (isLandscape) {
-    const hTxt = document.getElementById('orientHintTxt'); if (hTxt) hTxt.textContent = 'Modo Paisagem Ativo';
-    orientHint.style.color = '#4ade80';
+  const hTxt = document.getElementById('orientHintTxt');
+
+  if (isLandscape || rotateBypassed) {
+    if (sigRotateOverlay) sigRotateOverlay.classList.remove('show');
+    if (hTxt) hTxt.textContent = 'Modo Paisagem Ativo';
+    if (orientHint) orientHint.style.color = '#4ade80';
   } else {
-    const hTxt = document.getElementById('orientHintTxt'); if (hTxt) hTxt.textContent = 'Gire para a horizontal';
-    orientHint.style.color = '#38bdf8';
+    if (sigRotateOverlay) sigRotateOverlay.classList.add('show');
+    if (hTxt) hTxt.textContent = 'Gire para a horizontal';
+    if (orientHint) orientHint.style.color = '#38bdf8';
   }
+}
+
+function dismissRotateOverlay() {
+  rotateBypassed = true;
+  if (sigRotateOverlay) sigRotateOverlay.classList.remove('show');
+  setupCanvasDimensions();
 }
 
 window.addEventListener('resize', () => {
@@ -1182,10 +1286,24 @@ window.addEventListener('resize', () => {
   }
 });
 
+window.addEventListener('orientationchange', () => {
+  setTimeout(() => {
+    if (sigModal.classList.contains('open')) {
+      checkOrientation();
+      setupCanvasDimensions();
+    }
+  }, 200);
+});
+
 function openSignature(key, label) {
   activeSigKey = key;
   activeSigLabel = label;
-  document.getElementById('sigModalTitle').textContent = `Assinar: ${label}`;
+  rotateBypassed = false;
+  document.getElementById('sigModalTitle').textContent = `Assinatura · ${label}`;
+  
+  const subLabel = document.getElementById('sigGuidelineSub');
+  if (subLabel) subLabel.textContent = `Escreva sobre a linha guia · ${label}`;
+
   sigModal.classList.add('open');
   checkOrientation();
   setupCanvasDimensions();
@@ -1197,6 +1315,7 @@ function openSignature(key, label) {
       const rect = sigCanvas.getBoundingClientRect();
       sigCtx.drawImage(img, 0, 0, rect.width, rect.height);
       sigStrokeCount = 1;
+      if (sigGuidelineLayer) sigGuidelineLayer.classList.add('signing');
     };
     img.src = assinaturas[key];
   }
@@ -1204,12 +1323,14 @@ function openSignature(key, label) {
 
 function closeSignature(save = false) {
   sigModal.classList.remove('open');
+  if (sigRotateOverlay) sigRotateOverlay.classList.remove('show');
   activeSigKey = null;
 }
 
 function clearActiveSig() {
   sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
   sigStrokeCount = 0;
+  if (sigGuidelineLayer) sigGuidelineLayer.classList.remove('signing');
 }
 
 function saveActiveSig() {
@@ -1231,7 +1352,7 @@ function saveActiveSig() {
     prevImg.classList.remove('hidden');
   }
   if (badge) {
-    badge.textContent = 'Assinado'; badge.style.color = '#15803d'; badge.style.fontWeight = '700';
+    badge.textContent = 'Assinado';
     badge.style.color = '#15803d';
     badge.style.fontWeight = '700';
   }
@@ -1253,6 +1374,7 @@ sigCanvas.addEventListener('pointerdown', e => {
   sigCtx.beginPath();
   sigCtx.moveTo(x, y);
   sigStrokeCount++;
+  if (sigGuidelineLayer) sigGuidelineLayer.classList.add('signing');
 });
 
 sigCanvas.addEventListener('pointermove', e => {
