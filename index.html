@@ -112,12 +112,19 @@
     background: linear-gradient(135deg, #090e24 0%, #141d52 50%, #1e2a78 100%);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     color: #fff; text-align: center; padding: 24px;
-    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.5s ease;
+    transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.4s ease;
+    animation: autoDismissSplash 1.6s ease forwards;
+    cursor: pointer;
   }
   #appSplash.hide {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+  @keyframes autoDismissSplash {
+    0%, 75% { opacity: 1; visibility: visible; }
+    99% { opacity: 0; visibility: visible; }
+    100% { opacity: 0; visibility: hidden; pointer-events: none; }
   }
   .splash-icon-box {
     width: 88px; height: 88px; border-radius: 26px;
@@ -2243,34 +2250,6 @@ function limparFormulario() {
   });
   setarDataHoraAtual();
   setarDataHero();
-
-  // Desvanecer Splash Screen suavemente
-  window.addEventListener('load', () => {
-    setTimeout(() => {
-      const splash = document.getElementById('appSplash');
-      if (splash) splash.classList.add('hide');
-    }, 850);
-  });
-
-  // Atualizar data de hoje no Hero Card
-  function setarDataHero() {
-    const datePill = document.getElementById('introDatePill');
-    if (datePill) {
-      const today = new Date();
-      datePill.textContent = today.toLocaleDateString('pt-BR');
-    }
-  }
-
-
-// Registrar Service Worker para instalação de PWA / App Mobile
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(err => {
-      console.warn('Service Worker não suportado ou erro de registro:', err);
-    });
-  });
-}
-
   refreshProgresso();
   try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2282,7 +2261,48 @@ document.getElementById('btnLimpar').addEventListener('click', () => {
   }
 });
 
+// Atualizar data de hoje no Hero Card
+function setarDataHero() {
+  const datePill = document.getElementById('introDatePill');
+  if (datePill) {
+    const today = new Date();
+    datePill.textContent = today.toLocaleDateString('pt-BR');
+  }
+}
 
+// Fechamento infalível da Splash Screen
+function fecharSplash() {
+  const splash = document.getElementById('appSplash');
+  if (splash && !splash.classList.contains('hide')) {
+    splash.classList.add('hide');
+    setTimeout(() => {
+      try { splash.remove(); } catch(e) {}
+    }, 450);
+  }
+}
+
+// Suporte para fechar imediatamente ao tocar na tela de splash
+const splashElem = document.getElementById('appSplash');
+if (splashElem) {
+  splashElem.addEventListener('click', fecharSplash);
+  splashElem.addEventListener('touchstart', fecharSplash, { passive: true });
+}
+
+// Temporizador rápido para fechar a tela de abertura
+setTimeout(fecharSplash, 800);
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  setTimeout(fecharSplash, 250);
+} else {
+  window.addEventListener('DOMContentLoaded', () => setTimeout(fecharSplash, 250));
+  window.addEventListener('load', () => setTimeout(fecharSplash, 250));
+}
+
+// Registrar Service Worker para instalação de PWA / App Mobile
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(err => {
+    console.warn('Service Worker não suportado ou erro de registro:', err);
+  });
+}
 
 // Inicialização da Aplicação
 function setarDataHoraAtual() {
@@ -2293,6 +2313,7 @@ function setarDataHoraAtual() {
 }
 
 setarDataHoraAtual();
+setarDataHero();
 restaurarRascunho();
 </script>
 </body>
