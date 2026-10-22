@@ -1580,37 +1580,41 @@ function renderizarSvgParaImagem() {
   });
 }
 
-// Montagem do PDF Fiel ao Documento Impresso Oficial Gomex
+// Montagem do PDF Fiel ao Documento Impresso Oficial Gomex (Layout Perfeito 1 Página A4)
 async function gerarPdfOficial(d, numero) {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
 
-  const M = 8;
-  const W = 194;
+  const M = 8;        // Margem esquerda/direita (8mm)
+  const W = 194;      // Largura útil (210 - 16 = 194mm)
   const ROXO = [48, 42, 110];
   const CINZA = [100, 100, 115];
-  const LINHA = [180, 180, 195];
+  const LINHA = [185, 185, 198];
 
   const fonte = (tam, estilo = 'normal', cor = [20, 20, 30]) => {
     doc.setFont('helvetica', estilo);
     doc.setFontSize(tam);
     doc.setTextColor(...cor);
   };
+
   const barraTitulo = (x, y, w, txt) => {
     doc.setFillColor(...ROXO);
-    doc.rect(x, y, w, 5.2, 'F');
-    fonte(8, 'bold', [255, 255, 255]);
-    doc.text(txt, x + 2, y + 3.8);
+    doc.rect(x, y, w, 5.0, 'F');
+    fonte(7.5, 'bold', [255, 255, 255]);
+    doc.text(txt, x + 2.5, y + 3.6);
   };
+
   const caixa = (x, y, w, h) => {
     doc.setDrawColor(...LINHA);
-    doc.setLineWidth(0.25);
+    doc.setLineWidth(0.22);
     doc.rect(x, y, w, h);
   };
+
   const corta = (txt, maxW) => {
     const l = doc.splitTextToSize(String(txt || ''), maxW);
     return l[0] || '';
   };
+
   const dataBr = iso => {
     if (!iso) return '__/__/____';
     const p = iso.split('-');
@@ -1619,143 +1623,204 @@ async function gerarPdfOficial(d, numero) {
 
   let y = M;
 
-  // Cabeçalho
-  const logoSrc = document.querySelector('header img')?.src;
-  if (logoSrc) {
-    try { doc.addImage(logoSrc, 'WEBP', M, y, 32, 12); } catch (e) {}
-  }
-  fonte(13, 'bold', ROXO);
-  doc.text('CHECK-LIST DE VEÍCULO · CONTROLE DE FROTA', M + 36, y + 5);
-  fonte(7, 'normal', CINZA);
-  doc.text('Preencha marcando um X. Item marcado em NÃO OK deve ser descrito em Observações e comunicado ao responsável antes da saída.', M + 36, y + 9);
+  // ==============================================================================
+  // 1. CABEÇALHO DO DOCUMENTO
+  // ==============================================================================
+  // Emblema Oficial Gomex Frota
+  doc.setFillColor(...ROXO);
+  doc.roundedRect(M, y, 26, 11.5, 2, 2, 'F');
+  fonte(8.5, 'bold', [255, 255, 255]);
+  doc.text('GOMEX', M + 13, y + 5.2, { align: 'center' });
+  fonte(5.8, 'bold', [196, 210, 255]);
+  doc.text('FROTA', M + 13, y + 8.8, { align: 'center' });
 
-  caixa(M + W - 22, y, 22, 11);
-  fonte(6.5, 'bold', CINZA); doc.text('Nº', M + W - 20, y + 4);
-  fonte(9, 'bold', ROXO); doc.text(String(numero || '____'), M + W - 14, y + 8);
-  y += 14;
+  // Título e Subtítulo
+  fonte(11.5, 'bold', ROXO);
+  doc.text('CHECK-LIST DE VEÍCULO · CONTROLE DE FROTA', M + 30, y + 4.8);
+  fonte(6.3, 'normal', CINZA);
+  doc.text('Documento oficial de vistoria e liberação da frota · Gomex Distribuidora', M + 30, y + 8.8);
 
-  // 1. Identificação
-  barraTitulo(M, y, W, '1. IDENTIFICAÇÃO'); y += 5.2;
+  // Caixa do Número de Vistoria
+  const numBoxW = 28;
+  const numBoxX = M + W - numBoxW;
+  doc.setFillColor(243, 244, 250);
+  doc.rect(numBoxX, y, numBoxW, 4.5, 'F');
+  caixa(numBoxX, y, numBoxW, 11.5);
+  fonte(5.5, 'bold', CINZA);
+  doc.text('Nº VISTORIA', numBoxX + numBoxW / 2, y + 3.2, { align: 'center' });
+  fonte(9.5, 'bold', ROXO);
+  doc.text(String(numero || '______'), numBoxX + numBoxW / 2, y + 9.0, { align: 'center' });
+
+  y += 13.5;
+
+  // ==============================================================================
+  // 2. SEÇÃO 1: IDENTIFICAÇÃO DO VEÍCULO E MOTORISTA
+  // ==============================================================================
+  barraTitulo(M, y, W, '1. IDENTIFICAÇÃO DO VEÍCULO E MOTORISTA');
+  y += 5.0;
+
   const colW = [74, 52, 68];
   const veiculoNome = d.veiculo === 'Outro' ? (d.veiculo_outro || 'Outro') : (d.veiculo || '—');
+  const hRowId = 7.0;
 
-  caixa(M, y, colW[0], 7.5);
-  fonte(5.8, 'bold', CINZA); doc.text('VEÍCULO', M + 1.5, y + 2.5);
-  fonte(8, 'normal'); doc.text(`[X] ${veiculoNome}`, M + 1.5, y + 6);
+  // Linha 1: Veículo, Placa, Data/Hora
+  caixa(M, y, colW[0], hRowId);
+  fonte(5.5, 'bold', CINZA); doc.text('VEÍCULO', M + 2, y + 2.5);
+  fonte(7.8, 'bold'); doc.text(`[X] ${veiculoNome}`, M + 2, y + 5.7);
 
-  caixa(M + colW[0], y, colW[1], 7.5);
-  fonte(5.8, 'bold', CINZA); doc.text('PLACA', M + colW[0] + 1.5, y + 2.5);
-  fonte(8.5, 'bold'); doc.text((d.placa || '—').toUpperCase(), M + colW[0] + 1.5, y + 6);
+  caixa(M + colW[0], y, colW[1], hRowId);
+  fonte(5.5, 'bold', CINZA); doc.text('PLACA', M + colW[0] + 2, y + 2.5);
+  fonte(8.5, 'bold'); doc.text((d.placa || '—').toUpperCase(), M + colW[0] + 2, y + 5.7);
 
-  caixa(M + colW[0] + colW[1], y, colW[2], 7.5);
-  fonte(5.8, 'bold', CINZA); doc.text('DATA / HORA', M + colW[0] + colW[1] + 1.5, y + 2.5);
-  fonte(8, 'normal'); doc.text(`${dataBr(d.data)}  ${d.hora || ''}`, M + colW[0] + colW[1] + 1.5, y + 6);
-  y += 7.5;
+  caixa(M + colW[0] + colW[1], y, colW[2], hRowId);
+  fonte(5.5, 'bold', CINZA); doc.text('DATA / HORA', M + colW[0] + colW[1] + 2, y + 2.5);
+  fonte(7.8, 'normal'); doc.text(`${dataBr(d.data)} · ${d.hora || '—'}`, M + colW[0] + colW[1] + 2, y + 5.7);
+  y += hRowId;
 
-  caixa(M, y, colW[0], 7.5);
-  fonte(5.8, 'bold', CINZA); doc.text('MOTORISTA / VENDEDOR', M + 1.5, y + 2.5);
-  fonte(8, 'normal'); doc.text(corta(d.motorista || '—', colW[0] - 4), M + 1.5, y + 6);
+  // Linha 2: Motorista, Km, Tipo
+  caixa(M, y, colW[0], hRowId);
+  fonte(5.5, 'bold', CINZA); doc.text('MOTORISTA / VENDEDOR', M + 2, y + 2.5);
+  fonte(7.8, 'normal'); doc.text(corta(d.motorista || '—', colW[0] - 4), M + 2, y + 5.7);
 
-  caixa(M + colW[0], y, colW[1], 7.5);
-  fonte(5.8, 'bold', CINZA); doc.text('KM ATUAL', M + colW[0] + 1.5, y + 2.5);
-  fonte(8, 'normal'); doc.text(d.km ? `${d.km} km` : '—', M + colW[0] + 1.5, y + 6);
+  caixa(M + colW[0], y, colW[1], hRowId);
+  fonte(5.5, 'bold', CINZA); doc.text('KM ATUAL', M + colW[0] + 2, y + 2.5);
+  fonte(7.8, 'bold'); doc.text(d.km ? `${d.km} km` : '—', M + colW[0] + 2, y + 5.7);
 
-  caixa(M + colW[0] + colW[1], y, colW[2], 7.5);
-  fonte(5.8, 'bold', CINZA); doc.text('TIPO DE VISTORIA', M + colW[0] + colW[1] + 1.5, y + 2.5);
-  fonte(8, 'normal'); doc.text(`[X] ${d.tipo || '—'}`, M + colW[0] + colW[1] + 1.5, y + 6);
-  y += 7.5;
+  caixa(M + colW[0] + colW[1], y, colW[2], hRowId);
+  fonte(5.5, 'bold', CINZA); doc.text('TIPO DE VISTORIA', M + colW[0] + colW[1] + 2, y + 2.5);
+  fonte(7.8, 'normal'); doc.text(`[X] ${d.tipo || '—'}`, M + colW[0] + colW[1] + 2, y + 5.7);
+  y += hRowId;
 
-  caixa(M, y, colW[0], 7.5);
-  fonte(5.8, 'bold', CINZA); doc.text('COMBUSTÍVEL', M + 1.5, y + 2.5);
-  fonte(8, 'normal'); doc.text(`[X] ${d.comb || '—'}`, M + 1.5, y + 6);
+  // Linha 3: Combustível, Última Revisão, Próxima Revisão
+  caixa(M, y, colW[0], hRowId);
+  fonte(5.5, 'bold', CINZA); doc.text('NÍVEL DE COMBUSTÍVEL', M + 2, y + 2.5);
+  fonte(7.8, 'normal'); doc.text(`[X] ${d.comb || '—'}`, M + 2, y + 5.7);
 
-  caixa(M + colW[0], y, colW[1], 7.5);
-  fonte(5.8, 'bold', CINZA); doc.text('ÚLT. REVISÃO (KM / DATA)', M + colW[0] + 1.5, y + 2.5);
-  fonte(7.5, 'normal'); doc.text(`${d.rev_ult_km ? d.rev_ult_km + ' km' : ''} ${dataBr(d.rev_ult_data)}`, M + colW[0] + 1.5, y + 6);
+  caixa(M + colW[0], y, colW[1], hRowId);
+  fonte(5.5, 'bold', CINZA); doc.text('ÚLT. REVISÃO (KM / DATA)', M + colW[0] + 2, y + 2.5);
+  fonte(7.2, 'normal'); doc.text(`${d.rev_ult_km ? d.rev_ult_km + ' km' : ''} ${dataBr(d.rev_ult_data)}`, M + colW[0] + 2, y + 5.7);
 
-  caixa(M + colW[0] + colW[1], y, colW[2], 7.5);
-  fonte(5.8, 'bold', CINZA); doc.text('PRÓX. REVISÃO (KM / DATA)', M + colW[0] + colW[1] + 1.5, y + 2.5);
-  fonte(7.5, 'normal'); doc.text(`${d.rev_prox_km ? d.rev_prox_km + ' km' : ''} ${dataBr(d.rev_prox_data)}`, M + colW[0] + colW[1] + 1.5, y + 6);
-  y += 9.5;
+  caixa(M + colW[0] + colW[1], y, colW[2], hRowId);
+  fonte(5.5, 'bold', CINZA); doc.text('PRÓX. REVISÃO (KM / DATA)', M + colW[0] + colW[1] + 2, y + 2.5);
+  fonte(7.2, 'normal'); doc.text(`${d.rev_prox_km ? d.rev_prox_km + ' km' : ''} ${dataBr(d.rev_prox_data)}`, M + colW[0] + colW[1] + 2, y + 5.7);
+  y += hRowId + 2.0;
 
-  // 2. Avarias & 3. Pneus
+  // ==============================================================================
+  // 3. SEÇÃO 2 (AVARIAS) & SEÇÃO 3 (PNEUS E REQUISITOS)
+  // ==============================================================================
   const wAvarias = 98;
   const xPneus = M + wAvarias + 3;
-  const wPneus = W - wAvarias - 3;
-  const topSec = y;
+  const wPneus = W - wAvarias - 3; // 93mm
+  const hSec2 = 62.0;
 
   barraTitulo(M, y, wAvarias, '2. AVARIAS NA CARROCERIA');
-  barraTitulo(xPneus, y, wPneus, '3. PNEUS');
-  y += 5.2;
+  barraTitulo(xPneus, y, wPneus, '3. PNEUS E REQUISITOS');
+  y += 5.0;
 
+  // Coluna Esquerda: Avarias
+  caixa(M, y, wAvarias, hSec2);
   const avariasImg = await renderizarSvgParaImagem();
-  caixa(M, y, wAvarias, 68);
   if (avariasImg) {
-    try { doc.addImage(avariasImg, 'JPEG', M + 1, y + 1, wAvarias - 2, 54); } catch (e) {}
+    try { doc.addImage(avariasImg, 'JPEG', M + 1, y + 1, wAvarias - 2, 48.5); } catch (e) {}
   }
-  fonte(6.5, 'normal', CINZA);
-  doc.text('Marque no desenho: A amassado · R risco · Q quebrado · T trincado · F faltando', M + 2, y + 59);
-  const semAvText = d.sem_avarias ? '[X] Sem avarias novas desde a última vistoria' : `[ ] Sem avarias novas (${d.avarias?.length || 0} marcada(s))`;
-  fonte(7, 'bold', d.sem_avarias ? [21, 128, 61] : [185, 28, 28]);
-  doc.text(semAvText, M + 2, y + 64);
+  fonte(5.8, 'normal', CINZA);
+  doc.text('Legenda: A Amassado · R Risco · Q Quebrado · T Trincado · F Faltando', M + 2.5, y + 53.5);
+  const semAvText = d.sem_avarias ? '[X] Sem avarias novas desde a última vistoria (Veículo íntegro)' : `[X] ${d.avarias?.length || 0} avaria(s) marcada(s) no mapa da carroceria`;
+  fonte(6.5, 'bold', d.sem_avarias ? [21, 128, 61] : [185, 28, 28]);
+  doc.text(semAvText, M + 2.5, y + 58.5);
 
+  // Coluna Direita: Pneus e Requisitos
   let yP = y;
-  doc.setFillColor(240, 242, 248); doc.rect(xPneus, yP, wPneus, 4.5, 'F'); caixa(xPneus, yP, wPneus, 4.5);
-  fonte(5.8, 'bold', CINZA);
-  doc.text('POSIÇÃO', xPneus + 1.5, yP + 3.1);
-  doc.text('BOM', xPneus + 31, yP + 3.1);
-  doc.text('MEIA', xPneus + 44, yP + 3.1);
-  doc.text('GASTO', xPneus + 58, yP + 3.1);
-  doc.text('PSI', xPneus + 74, yP + 3.1);
+
+  // Cabeçalho da tabela de pneus com divisórias verticais
+  doc.setFillColor(240, 242, 248);
+  doc.rect(xPneus, yP, wPneus, 4.5, 'F');
+  caixa(xPneus, yP, wPneus, 4.5);
+  doc.line(xPneus + 33, yP, xPneus + 33, yP + 4.5);
+  doc.line(xPneus + 48, yP, xPneus + 48, yP + 4.5);
+  doc.line(xPneus + 63, yP, xPneus + 63, yP + 4.5);
+  doc.line(xPneus + 78, yP, xPneus + 78, yP + 4.5);
+
+  fonte(5.5, 'bold', CINZA);
+  doc.text('POSIÇÃO', xPneus + 2.0, yP + 3.1);
+  doc.text('BOM', xPneus + 40.5, yP + 3.1, { align: 'center' });
+  doc.text('MEIA', xPneus + 55.5, yP + 3.1, { align: 'center' });
+  doc.text('GASTO', xPneus + 70.5, yP + 3.1, { align: 'center' });
+  doc.text('PSI', xPneus + 85.5, yP + 3.1, { align: 'center' });
   yP += 4.5;
 
+  // 5 Linhas de Pneus com colunas alinhadas
   (d.pneus || []).forEach(p => {
-    caixa(xPneus, yP, wPneus, 5.8);
-    fonte(7, 'bold'); doc.text(p.pos, xPneus + 1.5, yP + 4);
-    fonte(7.5, 'bold');
-    doc.text(p.estado === 'Bom' ? '[X]' : '[ ]', xPneus + 32, yP + 4);
-    doc.text(p.estado === 'Meia vida' ? '[X]' : '[ ]', xPneus + 45, yP + 4);
-    doc.text(p.estado === 'Gasto' ? '[X]' : '[ ]', xPneus + 60, yP + 4);
-    fonte(7.5, 'normal');
-    doc.text(String(p.psi || '—'), xPneus + 74, yP + 4);
-    yP += 5.8;
+    caixa(xPneus, yP, wPneus, 5.3);
+    doc.line(xPneus + 33, yP, xPneus + 33, yP + 5.3);
+    doc.line(xPneus + 48, yP, xPneus + 48, yP + 5.3);
+    doc.line(xPneus + 63, yP, xPneus + 63, yP + 5.3);
+    doc.line(xPneus + 78, yP, xPneus + 78, yP + 5.3);
+
+    fonte(6.5, 'bold'); doc.text(p.pos, xPneus + 2.0, yP + 3.8);
+    fonte(7.0, 'bold');
+    doc.text(p.estado === 'Bom' ? '[X]' : '[ ]', xPneus + 40.5, yP + 3.8, { align: 'center' });
+    doc.text(p.estado === 'Meia vida' ? '[X]' : '[ ]', xPneus + 55.5, yP + 3.8, { align: 'center' });
+    doc.text(p.estado === 'Gasto' ? '[X]' : '[ ]', xPneus + 70.5, yP + 3.8, { align: 'center' });
+    fonte(7.0, 'normal');
+    doc.text(String(p.psi || '—'), xPneus + 85.5, yP + 3.8, { align: 'center' });
+    yP += 5.3;
   });
 
-  caixa(xPneus, yP, wPneus, 7.5);
-  fonte(6.5, 'bold');
-  const danoTxt = `Desgaste irregular, bolha ou corte?  ${d.pneu_dano === 'Sim' ? '[X] SIM' : '[X] NÃO'}`;
-  doc.text(danoTxt, xPneus + 2, yP + 4.8);
-  yP += 7.5;
+  // Linha Dano / Corte
+  caixa(xPneus, yP, wPneus, 6.0);
+  fonte(6.2, 'bold');
+  const danoTxt = `Desgaste irregular / bolha: ${d.pneu_dano === 'Sim' ? '[X] SIM' : '[X] NÃO'}`;
+  doc.text(danoTxt, xPneus + 2.0, yP + 4.1);
+  yP += 6.0;
 
-  [['Validade extintor', d.extintor_validade || '—'],
-   ['Temp. Thermo Star', d.thermo_temp ? `${d.thermo_temp} °C` : '—'],
-   ['Condição motorista', d.condicao === 'Cansado' ? 'Cansado / indisposto' : 'Descansado e apto']]
+  // 3 Quadros Adicionais (Extintor, Thermo Star, Condição)
+  [['VALIDADE DO EXTINTOR', d.extintor_validade || '—'],
+   ['TEMP. THERMO STAR', d.thermo_temp ? `${d.thermo_temp} °C` : 'N/A'],
+   ['CONDIÇÃO DO MOTORISTA', d.condicao === 'Cansado' ? 'Cansado / Indisposto' : 'Descansado e Apto']]
   .forEach(([rot, val]) => {
-    caixa(xPneus, yP, wPneus, 6.8);
-    fonte(5.8, 'bold', CINZA); doc.text(rot.toUpperCase(), xPneus + 1.5, yP + 2.5);
-    fonte(7.5, 'normal'); doc.text(val, xPneus + 1.5, yP + 5.8);
-    yP += 6.8;
+    caixa(xPneus, yP, wPneus, 8.3);
+    fonte(5.5, 'bold', CINZA); doc.text(rot, xPneus + 2.0, yP + 2.8);
+    fonte(7.5, 'normal'); doc.text(val, xPneus + 2.0, yP + 6.3);
+    yP += 8.3;
   });
 
-  y = topSec + 5.2 + 68 + 3;
+  y += hSec2 + 2.5;
 
-  // 4. Itens de Verificação
-  barraTitulo(M, y, W, '4. ITENS DE VERIFICAÇÃO'); y += 5.2;
-  const colWItem = W / 2;
-  const hItem = 4.7;
+  // ==============================================================================
+  // 4. SEÇÃO 4: ITENS DE VERIFICAÇÃO (INSPEÇÃO GERAL)
+  // ==============================================================================
+  barraTitulo(M, y, W, '4. ITENS DE VERIFICAÇÃO (INSPEÇÃO GERAL)');
+  y += 5.0;
+
+  const colWItem = 95.5; // (194 - 3) / 2 = 95.5mm
+  const gapItem = 3.0;
+  const hItem = 4.5;
 
   const gruposUnicos = [...new Set((d.itens || []).map(i => i.grupo))];
   const colEsq = gruposUnicos.slice(0, 2);
   const colDir = gruposUnicos.slice(2);
 
   [colEsq, colDir].forEach((grupos, cIdx) => {
-    const curX = M + cIdx * colWItem;
+    const curX = M + cIdx * (colWItem + gapItem);
     let curY = y;
 
     grupos.forEach(grp => {
-      doc.setFillColor(243, 244, 250); doc.rect(curX, curY, colWItem, hItem, 'F'); caixa(curX, curY, colWItem, hItem);
-      fonte(6.5, 'bold', ROXO); doc.text(grp.toUpperCase(), curX + 2, curY + 3.2);
-      fonte(5.5, 'bold', CINZA); doc.text('OK  NOK  N/A', curX + colWItem - 16, curY + 3.2);
+      // Cabeçalho do Grupo com colunas
+      doc.setFillColor(240, 242, 248);
+      doc.rect(curX, curY, colWItem, hItem, 'F');
+      caixa(curX, curY, colWItem, hItem);
+      doc.line(curX + 71.5, curY, curX + 71.5, curY + hItem);
+      doc.line(curX + 79.5, curY, curX + 79.5, curY + hItem);
+      doc.line(curX + 87.5, curY, curX + 87.5, curY + hItem);
+
+      fonte(6.2, 'bold', ROXO);
+      doc.text(grp.toUpperCase(), curX + 2.0, curY + 3.2);
+
+      fonte(5.2, 'bold', CINZA);
+      doc.text('OK', curX + 75.5, curY + 3.2, { align: 'center' });
+      doc.text('NOK', curX + 83.5, curY + 3.2, { align: 'center' });
+      doc.text('N/A', curX + 91.5, curY + 3.2, { align: 'center' });
       curY += hItem;
 
       (d.itens || []).filter(i => i.grupo === grp).forEach(i => {
@@ -1765,38 +1830,68 @@ async function gerarPdfOficial(d, numero) {
           doc.setFillColor(254, 226, 226);
           doc.rect(curX, curY, colWItem, hItem, 'F');
         }
-        fonte(7, isBad ? 'bold' : 'normal', isBad ? [185, 28, 28] : [20, 20, 30]);
-        doc.text(corta(i.nome, colWItem - 22), curX + 2, curY + 3.2);
 
-        fonte(6.5, 'bold');
-        doc.text(i.valor === 'OK' ? '[X]' : '[ ]', curX + colWItem - 17, curY + 3.2);
-        doc.text(i.valor === 'NOK' ? '[X]' : '[ ]', curX + colWItem - 11, curY + 3.2);
-        doc.text(i.valor === 'NA' ? '[X]' : '[ ]', curX + colWItem - 5, curY + 3.2);
+        doc.line(curX + 71.5, curY, curX + 71.5, curY + hItem);
+        doc.line(curX + 79.5, curY, curX + 79.5, curY + hItem);
+        doc.line(curX + 87.5, curY, curX + 87.5, curY + hItem);
+
+        fonte(6.8, isBad ? 'bold' : 'normal', isBad ? [185, 28, 28] : [20, 20, 30]);
+        doc.text(corta(i.nome, colWItem - 26), curX + 2.0, curY + 3.2);
+
+        fonte(6.5, 'bold', isBad ? [185, 28, 28] : [20, 20, 30]);
+        doc.text(i.valor === 'OK' ? '[X]' : '[ ]', curX + 75.5, curY + 3.2, { align: 'center' });
+        doc.text(i.valor === 'NOK' ? '[X]' : '[ ]', curX + 83.5, curY + 3.2, { align: 'center' });
+        doc.text(i.valor === 'NA' ? '[X]' : '[ ]', curX + 91.5, curY + 3.2, { align: 'center' });
         curY += hItem;
       });
     });
   });
 
-  y += 18 * hItem + 2;
+  // 17 linhas no total por coluna * 4.5mm
+  y += 17 * hItem + 2.5;
 
-  // 5. Observações
-  barraTitulo(M, y, W, '5. OBSERVAÇÕES / PROBLEMAS ENCONTRADOS'); y += 5.2;
-  caixa(M, y, W, 18);
-  fonte(7.5, 'normal');
-  const obsLinhas = doc.splitTextToSize(d.obs || 'Nenhuma observação ou pendência registrada.', W - 4);
-  doc.text(obsLinhas.slice(0, 4), M + 2, y + 4);
-  y += 20;
+  // ==============================================================================
+  // 5. SEÇÃO 5: OBSERVAÇÕES E LIBERAÇÃO DO VEÍCULO
+  // ==============================================================================
+  barraTitulo(M, y, W, '5. OBSERVAÇÕES E LIBERAÇÃO DO VEÍCULO');
+  y += 5.0;
 
-  // Liberação
-  caixa(M, y, W, 8);
-  fonte(6, 'bold', CINZA); doc.text('LIBERAÇÃO DO VEÍCULO', M + 2, y + 2.8);
+  // Caixa de Observações
+  caixa(M, y, W, 13.0);
+  fonte(5.5, 'bold', CINZA);
+  doc.text('OBSERVAÇÕES E NÃO CONFORMIDADES REGISTRADAS:', M + 2.0, y + 2.6);
+  fonte(7.0, 'normal');
+  const obsLinhas = doc.splitTextToSize(d.obs || 'Nenhuma observação ou pendência registrada. Veículo vistoriado conforme os padrões da Gomex.', W - 4);
+  doc.text(obsLinhas.slice(0, 3), M + 2.0, y + 6.0);
+  y += 13.0 + 1.5;
+
+  // Faixa de Liberação do Veículo com Destaque
   const libColor = d.liberacao === 'Liberado' ? [21, 128, 61] : d.liberacao === 'Ressalva' ? [180, 83, 9] : [185, 28, 28];
-  fonte(9.5, 'bold', libColor);
-  doc.text(`[X] ${d.liberacao ? d.liberacao.toUpperCase() : 'NÃO INFORMADO'}`, M + 2, y + 6.8);
-  y += 10;
+  const libBg = d.liberacao === 'Liberado' ? [220, 252, 231] : d.liberacao === 'Ressalva' ? [254, 243, 199] : [254, 226, 226];
+  doc.setFillColor(...libBg);
+  doc.rect(M, y, W, 7.5, 'F');
+  caixa(M, y, W, 7.5);
 
-  // 3 Assinaturas
-  const sigW = (W - 8) / 3;
+  fonte(6.2, 'bold', CINZA);
+  doc.text('PARECER FINAL DA VISTORIA:', M + 3.0, y + 4.8);
+  fonte(9.5, 'bold', libColor);
+  doc.text(`[X] ${(d.liberacao || 'NÃO INFORMADO').toUpperCase()}`, M + 60, y + 5.2);
+
+  fonte(6.2, 'bold', CINZA);
+  doc.text(`Condição Motorista: ${d.condicao === 'Cansado' ? 'Cansado / Indisposto' : 'Descansado e Apto'}`, M + W - 3.0, y + 4.8, { align: 'right' });
+  y += 7.5 + 2.5;
+
+  // ==============================================================================
+  // 6. SEÇÃO 6: TERMO DE RESPONSABILIDADE & ASSINATURAS
+  // ==============================================================================
+  barraTitulo(M, y, W, '6. TERMO DE RESPONSABILIDADE & ASSINATURAS');
+  y += 5.0;
+
+  fonte(5.5, 'normal', CINZA);
+  doc.text('Declaramos que as informações acima conferem com o estado real do veículo e foram verificadas nesta data.', M + 2.0, y + 2.8);
+  y += 3.8;
+
+  const sigW = (W - 6) / 3; // 62.6mm cada assinatura
   const sigDefs = [
     { k: 'ass_motorista', lbl: 'Motorista / Vendedor' },
     { k: 'ass_vistoriador', lbl: 'Vistoriador' },
@@ -1804,19 +1899,48 @@ async function gerarPdfOficial(d, numero) {
   ];
 
   sigDefs.forEach((sig, i) => {
-    const sX = M + i * (sigW + 4);
+    const sX = M + i * (sigW + 3);
+    caixa(sX, y, sigW, 20.0);
+
+    // Se houver assinatura, adiciona na caixa acima da linha
     if (d[sig.k]) {
-      try { doc.addImage(d[sig.k], 'PNG', sX + 4, y - 1, sigW - 8, 12); } catch (e) {}
+      try {
+        doc.addImage(d[sig.k], 'PNG', sX + 3, y + 0.8, sigW - 6, 11.2);
+      } catch (e) {}
     }
-    doc.setDrawColor(50, 50, 60); doc.setLineWidth(0.3);
-    doc.line(sX, y + 12, sX + sigW, y + 12);
-    fonte(7, 'bold');
-    doc.text(sig.lbl, sX + sigW / 2, y + 15.5, { align: 'center' });
+
+    // Linha impressa da assinatura
+    doc.setDrawColor(90, 90, 100);
+    doc.setLineWidth(0.25);
+    doc.line(sX + 4, y + 12.5, sX + sigW - 4, y + 12.5);
+
+    // Rótulo do cargo
+    fonte(6.5, 'bold', ROXO);
+    doc.text(sig.lbl, sX + sigW / 2, y + 15.6, { align: 'center' });
+
+    // Nome ou status da assinatura
+    if (sig.k === 'ass_motorista' && d.motorista) {
+      fonte(5.8, 'normal', [40, 40, 50]);
+      doc.text(corta(d.motorista, sigW - 6), sX + sigW / 2, y + 18.5, { align: 'center' });
+    } else if (d[sig.k]) {
+      fonte(5.5, 'normal', [21, 128, 61]);
+      doc.text('Assinado digitalmente', sX + sigW / 2, y + 18.5, { align: 'center' });
+    } else {
+      fonte(5.5, 'normal', CINZA);
+      doc.text('Pendente', sX + sigW / 2, y + 18.5, { align: 'center' });
+    }
   });
 
-  // Rodapé
-  fonte(6, 'normal', CINZA);
-  doc.text(`Gomex Distribuidora · Check-list de Frota Nº ${numero} · Placa: ${(d.placa || '').toUpperCase()}`, M + W / 2, 293, { align: 'center' });
+  // ==============================================================================
+  // 7. RODAPÉ DO DOCUMENTO
+  // ==============================================================================
+  doc.setDrawColor(210, 210, 220);
+  doc.setLineWidth(0.2);
+  doc.line(M, 284, M + W, 284);
+
+  fonte(5.5, 'normal', CINZA);
+  doc.text('Gomex Distribuidora · Sistema Gomex Frota · Check-list Vistoria Veicular', M, 288);
+  doc.text(`Vistoria Nº ${numero} · Placa: ${(d.placa || '').toUpperCase()} · Pág. 1/1`, M + W, 288, { align: 'right' });
 
   return doc;
 }
