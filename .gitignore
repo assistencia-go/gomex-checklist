@@ -1,0 +1,12 @@
+# Variáveis de ambiente com chaves de banco de dados (NUNCA SUBIR)
+.env
+.env.local
+.env.*.local
+
+# Dependências
+node_modules/
+
+# Logs e Sistema
+*.log
+.DS_Store
+Thumbs.db
