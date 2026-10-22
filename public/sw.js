@@ -2,11 +2,12 @@
 // GOMEX FROTA · SERVICE WORKER (OFFLINE FIRST & PWA)
 // ==============================================================================
 
-const CACHE_NAME = 'gomex-frota-v1.1';
+const CACHE_NAME = 'gomex-frota-v2.0';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.json',
+  '/icon.svg',
   'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap',
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
 ];
@@ -36,6 +37,20 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   // Ignora chamadas de API do Supabase/backend para que sejam sempre ao vivo
   if (event.request.url.includes('/api/')) {
+    return;
+  }
+
+  // Para navegação HTML (document), busca sempre da rede primeiro para receber as atualizações
+  if (event.request.mode === 'navigate' || event.request.destination === 'document') {
+    event.respondWith(
+      fetch(event.request).then(netRes => {
+        const clone = netRes.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        return netRes;
+      }).catch(() => {
+        return caches.match('/index.html') || caches.match('/');
+      })
+    );
     return;
   }
 
