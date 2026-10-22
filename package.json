@@ -1,0 +1,19 @@
+{
+  "name": "gomex-checklist",
+  "version": "1.0.0",
+  "description": "Sistema de Check-list de Veículos e Controle de Frota · Gomex Distribuidora",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "push": "node push_to_github.mjs"
+  },
+  "keywords": [
+    "gomex",
+    "checklist",
+    "frota",
+    "veiculos",
+    "saas"
+  ],
+  "author": "Gomex Distribuidora",
+  "license": "ISC"
+}
