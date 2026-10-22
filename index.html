@@ -105,6 +105,126 @@
     background: #34d399; transition: width .3s ease;
   }
 
+  
+  /* Splash Screen de Introdução Elegante */
+  #appSplash {
+    position: fixed; inset: 0; z-index: 9999;
+    background: linear-gradient(135deg, #090e24 0%, #141d52 50%, #1e2a78 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: #fff; text-align: center; padding: 24px;
+    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.5s ease;
+  }
+  #appSplash.hide {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .splash-icon-box {
+    width: 88px; height: 88px; border-radius: 26px;
+    background: rgba(255,255,255,0.12); border: 1.5px solid rgba(255,255,255,0.24);
+    display: grid; place-items: center; margin-bottom: 22px;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.3);
+    animation: splashPulse 2.2s infinite ease-in-out;
+  }
+  @keyframes splashPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 16px 40px rgba(0,0,0,0.45); }
+    50% { transform: scale(1.06); box-shadow: 0 20px 50px rgba(56,189,248,0.35); }
+  }
+  .splash-title {
+    font-size: 26px; font-weight: 800; margin: 0 0 6px; letter-spacing: -0.5px;
+    color: #ffffff; text-shadow: 0 2px 12px rgba(0,0,0,0.4);
+  }
+  .splash-sub {
+    font-size: 13.5px; color: #cbd5e1; margin: 0 0 32px; font-weight: 500;
+    max-width: 270px; line-height: 1.45;
+  }
+  .splash-bar-wrap {
+    width: 160px; height: 4px; background: rgba(255,255,255,0.18);
+    border-radius: 4px; overflow: hidden;
+  }
+  .splash-bar-fill {
+    width: 0%; height: 100%;
+    background: linear-gradient(90deg, #38bdf8, #10b981);
+    border-radius: 4px;
+    animation: splashBarFill 0.95s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+  @keyframes splashBarFill {
+    0% { width: 0%; }
+    100% { width: 100%; }
+  }
+
+  /* Intro Hero Card no Topo do Formulário */
+  .intro-hero-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
+    border: 1px solid #dbeafe;
+    border-radius: 16px;
+    padding: 18px 18px 14px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 18px rgba(30, 42, 120, 0.06);
+    position: relative;
+    overflow: hidden;
+  }
+  .intro-hero-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 3.5px;
+    background: linear-gradient(90deg, var(--brand), #3b82f6, #10b981);
+  }
+  .intro-hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #eff6ff;
+    color: #1e40af;
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 8px;
+    border: 1px solid #bfdbfe;
+  }
+  .live-dot {
+    width: 6px; height: 6px; border-radius: 50%; background: #2563eb;
+    box-shadow: 0 0 6px #2563eb;
+  }
+  .intro-hero-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 4px;
+    letter-spacing: -0.3px;
+  }
+  .intro-hero-desc {
+    font-size: 13px;
+    color: #64748b;
+    margin: 0 0 14px;
+    line-height: 1.45;
+  }
+  .intro-pills {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px solid #e2e8f0;
+  }
+  .intro-pill {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .pill-title {
+    font-size: 10px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .pill-val {
+    font-size: 12px;
+    font-weight: 800;
+    color: #1e293b;
+  }
+
   /* Conteúdo Principal */
   .main-wrap {
     max-width: 900px; margin: 0 auto; padding: 14px 14px 130px;
@@ -479,6 +599,25 @@
 </head>
 <body>
 
+<!-- Splash Screen Elegante de Introdução Gomex Frota -->
+<div id="appSplash">
+  <div class="splash-icon-box">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/>
+      <path d="M15 18H9"/>
+      <path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/>
+      <circle cx="17" cy="18.5" r="2.5" fill="#38bdf8"/>
+      <circle cx="7" cy="18.5" r="2.5" fill="#38bdf8"/>
+    </svg>
+  </div>
+  <h1 class="splash-title">Gomex Frota</h1>
+  <p class="splash-sub">Controle de Vistorias e Segurança Veicular</p>
+  <div class="splash-bar-wrap">
+    <div class="splash-bar-fill"></div>
+  </div>
+</div>
+
+
 <!-- Cabeçalho Principal -->
 <header>
   <div class="header-wrap">
@@ -512,6 +651,32 @@
 <!-- ABA 1: FORMULÁRIO DE CHECK-LIST MOBILE-FIRST -->
 <!-- ============================================================================== -->
 <div id="viewForm" class="main-wrap">
+
+  <!-- Cartão de Introdução e Boas-Vindas -->
+  <div class="intro-hero-card">
+    <div class="intro-hero-badge">
+      <span class="live-dot"></span>
+      <span>Vistoria Veicular Gomex</span>
+    </div>
+    <h2 class="intro-hero-title">Nova Inspeção de Frota</h2>
+    <p class="intro-hero-desc">
+      Realize a conferência completa dos itens de segurança, pneus e carroceria antes da liberação do veículo.
+    </p>
+    <div class="intro-pills">
+      <div class="intro-pill">
+        <span class="pill-title">Data de Hoje</span>
+        <span class="pill-val" id="introDatePill">--/--/----</span>
+      </div>
+      <div class="intro-pill">
+        <span class="pill-title">Progresso</span>
+        <span class="pill-val" id="introProgPill">0% Concluído</span>
+      </div>
+      <div class="intro-pill">
+        <span class="pill-title">Sistema</span>
+        <span class="pill-val" style="color:#10b981;">Online & Conectado</span>
+      </div>
+    </div>
+  </div>
 
   <form id="frm" autocomplete="off" onsubmit="return false">
 
@@ -2083,6 +2248,25 @@ function limparFormulario() {
     if (slot) slot.classList.remove('signed');
   });
   setarDataHoraAtual();
+  setarDataHero();
+
+  // Desvanecer Splash Screen suavemente
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      const splash = document.getElementById('appSplash');
+      if (splash) splash.classList.add('hide');
+    }, 850);
+  });
+
+  // Atualizar data de hoje no Hero Card
+  function setarDataHero() {
+    const datePill = document.getElementById('introDatePill');
+    if (datePill) {
+      const today = new Date();
+      datePill.textContent = today.toLocaleDateString('pt-BR');
+    }
+  }
+
 
 // Registrar Service Worker para instalação de PWA / App Mobile
 if ('serviceWorker' in navigator) {
