@@ -75,3 +75,35 @@ drop policy if exists "Permitir atualizacao anonima de checklists" on public.vei
 create policy "Permitir atualizacao anonima de checklists"
   on public.veiculo_checklists for update
   using (true);
+
+-- ==============================================================================
+-- Sequência Oficial de Numeração de Vistorias
+-- ==============================================================================
+create sequence if not exists public.checklist_numero_seq start with 1 increment by 1;
+
+create or replace function public.proximo_numero_checklist()
+returns text as $$
+begin
+  return lpad(nextval('public.checklist_numero_seq')::text, 6, '0');
+end;
+$$ language plpgsql;
+
+alter table public.veiculo_checklists 
+  alter column numero set default public.proximo_numero_checklist();
+
+create or replace function public.trg_set_checklist_numero()
+returns trigger as $$
+begin
+  if NEW.numero is null or NEW.numero = '' or NEW.numero = 'AUTO' then
+    NEW.numero := public.proximo_numero_checklist();
+  end if;
+  return NEW;
+end;
+$$ language plpgsql;
+
+drop trigger if exists trg_veiculo_checklists_numero on public.veiculo_checklists;
+create trigger trg_veiculo_checklists_numero
+  before insert on public.veiculo_checklists
+  for each row
+  execute function public.trg_set_checklist_numero();
+
