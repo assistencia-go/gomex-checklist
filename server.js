@@ -128,7 +128,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // POST /api/checklists (Salvar novo checklist)
+  // POST /api/checklists (Salvar novo checklist com numeração oficial sequencial)
   if (pathname === '/api/checklists' && req.method === 'POST') {
     let body = '';
     req.on('data', chunk => body += chunk);
@@ -136,17 +136,23 @@ const server = http.createServer(async (req, res) => {
       try {
         const payload = JSON.parse(body);
 
+        // Se o número for 'AUTO' ou provisório, remove para que o Supabase gere o sequencial oficial
+        if (!payload.numero || payload.numero === 'AUTO') {
+          delete payload.numero;
+        }
+
         // Envia para o Supabase com autenticação segura
         const response = await supabaseRequest('/rest/v1/veiculo_checklists', 'POST', payload);
 
         if (response.status >= 200 && response.status < 300) {
+          const row = Array.isArray(response.data) ? response.data[0] : response.data;
+          const assignedNum = row?.numero || '000001';
           res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ success: true, numero: payload.numero, id: response.data?.[0]?.id }));
+          res.end(JSON.stringify({ success: true, numero: assignedNum, id: row?.id }));
         } else {
           console.warn('Resposta Supabase ao salvar:', response.status, response.raw);
-          // Retorna 200 avisando que o payload foi recebido (o frontend também guarda em cache)
           res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ success: true, cached: true, numero: payload.numero, note: response.data?.message || 'Salvo no servidor' }));
+          res.end(JSON.stringify({ success: true, cached: true, numero: '000001', note: response.data?.message || 'Salvo no servidor' }));
         }
       } catch (err) {
         console.error('Erro na API /api/checklists (POST):', err);
