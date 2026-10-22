@@ -7,7 +7,15 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Gomex Frota">
-<title>Check-list de Veículo · Gomex Frota</title>
+
+  <!-- PWA & Mobile App Support -->
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/icon.svg">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Gomex Frota">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Check-list de Veículo · Gomex Frota</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -269,37 +277,67 @@
   }
   .btn-sign:hover { opacity: 0.95; }
 
-  /* Modal de Assinatura em Modo Horizontal / Tela Cheia */
+  /* Modal de Assinatura em Modo Horizontal / Tela Cheia 100% Otimizado Mobile */
+  body.modal-open {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
+    height: 100% !important;
+    touch-action: none !important;
+  }
   #sigModal {
-    position: fixed; inset: 0; z-index: 100; background: #0f172a;
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    width: 100vw; height: 100dvh; z-index: 100; background: #0f172a;
     display: none; flex-direction: column; justify-content: space-between;
+    box-sizing: border-box; overflow: hidden;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
   }
   #sigModal.open { display: flex; }
   .sig-modal-header {
-    background: #1e293b; color: #fff; padding: 12px 18px;
+    background: #1e293b; color: #fff; padding: 10px 16px;
     display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    flex-shrink: 0; border-bottom: 1px solid rgba(255,255,255,0.08);
   }
-  .sig-modal-header h3 { margin: 0; font-size: 15px; font-weight: 700; }
+  .sig-modal-header h3 { margin: 0; font-size: 14.5px; font-weight: 700; }
   .sig-orient-hint {
-    background: #334155; color: #38bdf8; font-size: 12px; font-weight: 600;
-    padding: 4px 10px; border-radius: 14px; display: inline-flex; align-items: center; gap: 5px;
+    background: #334155; color: #38bdf8; font-size: 11.5px; font-weight: 600;
+    padding: 3px 10px; border-radius: 14px; display: inline-flex; align-items: center; gap: 5px;
   }
   .sig-modal-body {
-    flex: 1; position: relative; background: #fff; display: flex; align-items: center; justify-content: center;
+    flex: 1; position: relative; background: #ffffff; display: flex; align-items: center; justify-content: center;
+    width: 100%; height: 100%; overflow: hidden;
   }
   #sigCanvas {
-    width: 100%; height: 100%; display: block; touch-action: none; background: #fff;
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    display: block; touch-action: none; background: transparent; z-index: 2;
   }
   .sig-modal-footer {
-    background: #1e293b; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    background: #1e293b; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    flex-shrink: 0; border-top: 1px solid rgba(255,255,255,0.08);
   }
   .btn-modal {
-    font-family: inherit; font-weight: 700; font-size: 14px;
-    padding: 10px 18px; border-radius: 10px; border: none; cursor: pointer;
+    font-family: inherit; font-weight: 700; font-size: 13.5px;
+    padding: 9px 16px; border-radius: 10px; border: none; cursor: pointer;
   }
   .btn-modal-clear { background: #475569; color: #fff; }
   .btn-modal-cancel { background: transparent; color: #94a3b8; }
   .btn-modal-save { background: #10b981; color: #fff; box-shadow: 0 2px 10px rgba(16, 185, 129, 0.4); }
+
+  /* Ajustes finos quando o celular estiver na horizontal (Landscape) */
+  @media (orientation: landscape) {
+    .sig-modal-header { padding: 4px 14px; min-height: 38px; }
+    .sig-modal-header h3 { font-size: 13px; }
+    .sig-orient-hint { font-size: 11px; padding: 2px 8px; }
+    .sig-modal-footer { padding: 5px 14px; min-height: 42px; }
+    .btn-modal { padding: 6px 14px; font-size: 12.5px; }
+    .sig-guideline-center { margin-top: 10px; width: 90%; }
+    .sig-guideline-top-text { display: none; }
+    .sig-guideline-sub { margin-top: 4px; font-size: 11px; }
+    .sig-guideline-x { font-size: 18px; }
+  }
 
   /* Barra de Ações Fixa */
   .bottom-bar {
@@ -1235,7 +1273,7 @@ frm.addEventListener('input', () => {
   salvarRascunho();
 });
 
-// Modal de Assinatura em Modo Horizontal com Linha Guia e Detecção de Orientação
+// Modal de Assinatura em Modo Horizontal com Linha Guia e Otimização para Mobile
 const sigModal = document.getElementById('sigModal');
 const sigCanvas = document.getElementById('sigCanvas');
 const sigCtx = sigCanvas.getContext('2d');
@@ -1245,17 +1283,40 @@ const sigRotateOverlay = document.getElementById('sigRotateOverlay');
 let isDrawing = false;
 let sigStrokeCount = 0;
 let rotateBypassed = false;
+let resizeTimer = null;
 
 function setupCanvasDimensions() {
-  const rect = sigCanvas.parentElement.getBoundingClientRect();
+  const container = sigCanvas.parentElement;
+  if (!container) return;
+  const rect = container.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return;
+
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  sigCanvas.width = rect.width * dpr;
-  sigCanvas.height = rect.height * dpr;
+
+  // Preserva os traços existentes em caso de rotação
+  let prevImg = null;
+  if (sigStrokeCount > 0 && sigCanvas.width > 0 && sigCanvas.height > 0) {
+    try { prevImg = sigCanvas.toDataURL(); } catch (e) {}
+  }
+
+  sigCanvas.width = Math.round(rect.width * dpr);
+  sigCanvas.height = Math.round(rect.height * dpr);
+  sigCanvas.style.width = rect.width + 'px';
+  sigCanvas.style.height = rect.height + 'px';
+
   sigCtx.scale(dpr, dpr);
   sigCtx.lineWidth = 2.6;
   sigCtx.lineCap = 'round';
   sigCtx.lineJoin = 'round';
   sigCtx.strokeStyle = '#0f172a';
+
+  if (prevImg) {
+    const img = new Image();
+    img.onload = () => {
+      sigCtx.drawImage(img, 0, 0, rect.width, rect.height);
+    };
+    img.src = prevImg;
+  }
 }
 
 function checkOrientation() {
@@ -1273,41 +1334,57 @@ function checkOrientation() {
   }
 }
 
+function handleOrientationOrResize() {
+  clearTimeout(resizeTimer);
+  checkOrientation();
+  setupCanvasDimensions();
+  // Multi-estágio para compensar o tempo de transição de orientação do Safari / Chrome Android
+  resizeTimer = setTimeout(() => {
+    checkOrientation();
+    setupCanvasDimensions();
+  }, 120);
+  setTimeout(() => {
+    checkOrientation();
+    setupCanvasDimensions();
+  }, 320);
+}
+
 function dismissRotateOverlay() {
   rotateBypassed = true;
   if (sigRotateOverlay) sigRotateOverlay.classList.remove('show');
-  setupCanvasDimensions();
+  handleOrientationOrResize();
 }
 
 window.addEventListener('resize', () => {
-  if (sigModal.classList.contains('open')) {
-    checkOrientation();
-    setupCanvasDimensions();
-  }
+  if (sigModal.classList.contains('open')) handleOrientationOrResize();
 });
 
 window.addEventListener('orientationchange', () => {
-  setTimeout(() => {
-    if (sigModal.classList.contains('open')) {
-      checkOrientation();
-      setupCanvasDimensions();
-    }
-  }, 200);
+  if (sigModal.classList.contains('open')) handleOrientationOrResize();
 });
+
+if (window.screen && window.screen.orientation) {
+  window.screen.orientation.addEventListener('change', () => {
+    if (sigModal.classList.contains('open')) handleOrientationOrResize();
+  });
+}
 
 function openSignature(key, label) {
   activeSigKey = key;
   activeSigLabel = label;
   rotateBypassed = false;
+  
+  // Travar o scroll da página no mobile
+  document.body.classList.add('modal-open');
+
   document.getElementById('sigModalTitle').textContent = `Assinatura · ${label}`;
   
   const subLabel = document.getElementById('sigGuidelineSub');
   if (subLabel) subLabel.textContent = `Escreva sobre a linha guia · ${label}`;
 
   sigModal.classList.add('open');
-  checkOrientation();
-  setupCanvasDimensions();
   clearActiveSig();
+  handleOrientationOrResize();
 
   if (assinaturas[key]) {
     const img = new Image();
@@ -1323,6 +1400,7 @@ function openSignature(key, label) {
 
 function closeSignature(save = false) {
   sigModal.classList.remove('open');
+  document.body.classList.remove('modal-open');
   if (sigRotateOverlay) sigRotateOverlay.classList.remove('show');
   activeSigKey = null;
 }
@@ -1881,6 +1959,16 @@ function limparFormulario() {
     if (slot) slot.classList.remove('signed');
   });
   setarDataHoraAtual();
+
+// Registrar Service Worker para instalação de PWA / App Mobile
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(err => {
+      console.warn('Service Worker não suportado ou erro de registro:', err);
+    });
+  });
+}
+
   refreshProgresso();
   try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
   window.scrollTo({ top: 0, behavior: 'smooth' });
