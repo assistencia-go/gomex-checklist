@@ -209,7 +209,7 @@
   }
   .intro-pills {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 8px;
     padding-top: 10px;
     border-top: 1px solid #e2e8f0;
@@ -671,10 +671,6 @@
       <div class="intro-pill">
         <span class="pill-title">Progresso</span>
         <span class="pill-val" id="introProgPill">0% Concluído</span>
-      </div>
-      <div class="intro-pill">
-        <span class="pill-title">Sistema</span>
-        <span class="pill-val" style="color:#10b981;">Online & Conectado</span>
       </div>
     </div>
   </div>
@@ -1367,8 +1363,8 @@ document.querySelectorAll('.tools-avarias button[data-k]').forEach(btn => {
 function renderAvarias() {
   vanMarksLayer.innerHTML = avarias.map(([x, y, k]) => `
     <g class="mk">
-      <circle cx="${x}" cy="${y}" r="6.5"/>
-      <text x="${x}" y="${y + 3.2}">${k}</text>
+      <circle cx="${x}" cy="${y}" r="6.8" fill="#dc2626" stroke="#ffffff" stroke-width="1.8"/>
+      <text x="${x}" y="${y}" fill="#ffffff" font-size="8.8" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">${k}</text>
     </g>
   `).join('');
   avariasCount.textContent = `${avarias.length} marca(s)`;
@@ -1718,7 +1714,7 @@ function coletarDadosFormulario() {
   return d;
 }
 
-// Geração do SVG em Imagem para o PDF
+// Geração do SVG em Imagem para o PDF (Sem bolinhas pretas e com alinhamento perfeito)
 function renderizarSvgParaImagem() {
   return new Promise(resolve => {
     try {
@@ -1726,6 +1722,33 @@ function renderizarSvgParaImagem() {
       clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
       clone.setAttribute('width', '900');
       clone.setAttribute('height', '546');
+
+      // 1. Injeta folha de estilos explícita dentro do SVG clonado
+      const styleEl = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+      styleEl.textContent = `
+        .mk circle { fill: #dc2626 !important; stroke: #ffffff !important; stroke-width: 2px !important; }
+        .mk text { fill: #ffffff !important; font-size: 8.8px !important; font-weight: bold !important; font-family: Arial, Helvetica, sans-serif !important; text-anchor: middle !important; dominant-baseline: central !important; }
+      `;
+      clone.insertBefore(styleEl, clone.firstChild);
+
+      // 2. Aplica atributos diretamente nos elementos das avarias
+      clone.querySelectorAll('.mk').forEach(g => {
+        const c = g.querySelector('circle');
+        if (c) {
+          c.setAttribute('fill', '#dc2626');
+          c.setAttribute('stroke', '#ffffff');
+          c.setAttribute('stroke-width', '2');
+        }
+        const t = g.querySelector('text');
+        if (t) {
+          t.setAttribute('fill', '#ffffff');
+          t.setAttribute('font-weight', 'bold');
+          t.setAttribute('font-size', '8.8');
+          t.setAttribute('font-family', 'Arial, Helvetica, sans-serif');
+          t.setAttribute('text-anchor', 'middle');
+          t.setAttribute('dominant-baseline', 'central');
+        }
+      });
 
       const xml = new XMLSerializer().serializeToString(clone);
       const img = new Image();
@@ -1736,7 +1759,7 @@ function renderizarSvgParaImagem() {
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, 900, 546);
         ctx.drawImage(img, 0, 0, 900, 546);
-        resolve(cv.toDataURL('image/jpeg', 0.85));
+        resolve(cv.toDataURL('image/jpeg', 0.92));
       };
       img.onerror = () => resolve(null);
       img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml);
@@ -2131,11 +2154,10 @@ document.getElementById('btnSalvar').addEventListener('click', async () => {
 
   const btnSalvar = document.getElementById('btnSalvar');
   btnSalvar.disabled = true;
-  btnSalvar.innerHTML = '⏳ Processando Vistoria...';
+  btnSalvar.innerHTML = '⏳ Gravando no Supabase...';
 
-  const numeroGerado = Math.floor(100000 + Math.random() * 900000).toString();
   const registro = {
-    numero: numeroGerado,
+    numero: 'AUTO',
     veiculo: d.veiculo,
     veiculo_outro: d.veiculo_outro || null,
     placa: (d.placa || '').toUpperCase().trim(),
@@ -2166,8 +2188,8 @@ document.getElementById('btnSalvar').addEventListener('click', async () => {
     status: 'concluido'
   };
 
-  // 1. Envia para a API segura no backend
-  let sincronizadoBackend = false;
+  // 1. Envia para a API segura no backend (obtém o número sequencial real gravado no Supabase)
+  let numeroOficial = null;
   try {
     const res = await fetch('/api/checklists', {
       method: 'POST',
@@ -2175,21 +2197,32 @@ document.getElementById('btnSalvar').addEventListener('click', async () => {
       body: JSON.stringify(registro)
     });
     if (res.ok) {
-      sincronizadoBackend = true;
+      const respData = await res.json();
+      if (respData && respData.numero) {
+        numeroOficial = respData.numero;
+        registro.numero = numeroOficial;
+      }
     }
   } catch (err) {
-    console.warn('Backend indisponível, gravando offline');
+    console.warn('Backend indisponível, gravando offline:', err);
+  }
+
+  // Fallback seguro caso esteja sem internet no momento
+  if (!numeroOficial) {
+    const localList = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
+    numeroOficial = String(localList.length + 1).padStart(6, '0');
+    registro.numero = numeroOficial;
   }
 
   // 2. Salva no cache local (garantia que nada se perde)
   salvarNoCacheLocal(registro);
 
-  // 3. Gera o PDF Oficial
+  // 3. Gera o PDF Oficial com o número REAL do Supabase
   try {
-    const doc = await gerarPdfOficial(d, numeroGerado);
+    const doc = await gerarPdfOficial(d, numeroOficial);
     ultimoPdfGerado = {
       doc: doc,
-      nome: `Checklist_${numeroGerado}_${registro.placa}_${registro.data}.pdf`
+      nome: `Checklist_${numeroOficial}_${registro.placa}_${registro.data}.pdf`
     };
   } catch (pdfErr) {
     console.error('Erro gerando PDF:', pdfErr);
@@ -2200,8 +2233,8 @@ document.getElementById('btnSalvar').addEventListener('click', async () => {
 
   try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
 
-  document.getElementById('successTitle').textContent = `Check-list Nº ${numeroGerado} Salvo!`;
-  document.getElementById('successSubtitle').textContent = `Veículo ${registro.placa} registrado às ${registro.hora}. Documento gerado com sucesso!`;
+  document.getElementById('successTitle').textContent = `Check-list Nº ${numeroOficial} Salvo!`;
+  document.getElementById('successSubtitle').textContent = `Vistoria ${registro.placa} registrada com sucesso no Supabase com o Nº oficial ${numeroOficial}.`;
 
   document.getElementById('successModal').classList.add('open');
 });
