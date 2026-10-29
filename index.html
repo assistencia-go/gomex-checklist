@@ -713,6 +713,11 @@
         <input type="text" name="motorista" id="motorista" placeholder="Nome completo do motorista" autocapitalize="words">
       </div>
 
+      <div class="fld">
+        <label>Rota / Região Operacional</label>
+        <input type="text" name="rota" id="rota" placeholder="Ex: Rota 01 - Centro / Oeste, Rota Sul..." autocapitalize="words">
+      </div>
+
       <div class="two-cols">
         <div class="fld">
           <label>Data *</label>
@@ -1866,18 +1871,22 @@ async function gerarPdfOficial(d, numero) {
   fonte(7.8, 'normal'); doc.text(`${dataBr(d.data)} · ${d.hora || '—'}`, M + colW[0] + colW[1] + 2, y + 5.7);
   y += hRowId;
 
-  // Linha 2: Motorista, Km, Tipo
-  caixa(M, y, colW[0], hRowId);
+  // Linha 2: Motorista (64mm), Rota (34mm), Km (36mm), Tipo (60mm)
+  caixa(M, y, 64, hRowId);
   fonte(5.5, 'bold', CINZA); doc.text('MOTORISTA / VENDEDOR', M + 2, y + 2.5);
-  fonte(7.8, 'normal'); doc.text(corta(d.motorista || '—', colW[0] - 4), M + 2, y + 5.7);
+  fonte(7.8, 'normal'); doc.text(corta(d.motorista || '—', 60), M + 2, y + 5.7);
 
-  caixa(M + colW[0], y, colW[1], hRowId);
-  fonte(5.5, 'bold', CINZA); doc.text('KM ATUAL', M + colW[0] + 2, y + 2.5);
-  fonte(7.8, 'bold'); doc.text(d.km ? `${d.km} km` : '—', M + colW[0] + 2, y + 5.7);
+  caixa(M + 64, y, 34, hRowId);
+  fonte(5.5, 'bold', CINZA); doc.text('ROTA / REGIÃO', M + 64 + 2, y + 2.5);
+  fonte(7.8, 'bold', ROXO); doc.text(corta(d.rota || '—', 30), M + 64 + 2, y + 5.7);
 
-  caixa(M + colW[0] + colW[1], y, colW[2], hRowId);
-  fonte(5.5, 'bold', CINZA); doc.text('TIPO DE VISTORIA', M + colW[0] + colW[1] + 2, y + 2.5);
-  fonte(7.8, 'normal'); doc.text(`[X] ${d.tipo || '—'}`, M + colW[0] + colW[1] + 2, y + 5.7);
+  caixa(M + 98, y, 36, hRowId);
+  fonte(5.5, 'bold', CINZA); doc.text('KM ATUAL', M + 98 + 2, y + 2.5);
+  fonte(7.8, 'bold'); doc.text(d.km ? `${d.km} km` : '—', M + 98 + 2, y + 5.7);
+
+  caixa(M + 134, y, 60, hRowId);
+  fonte(5.5, 'bold', CINZA); doc.text('TIPO DE VISTORIA', M + 134 + 2, y + 2.5);
+  fonte(7.8, 'normal'); doc.text(`[X] ${d.tipo || '—'}`, M + 134 + 2, y + 5.7);
   y += hRowId;
 
   // Linha 3: Combustível, Última Revisão, Próxima Revisão
@@ -2163,6 +2172,7 @@ document.getElementById('btnSalvar').addEventListener('click', async () => {
     placa: (d.placa || '').toUpperCase().trim(),
     km: Number(d.km) || 0,
     motorista: d.motorista,
+    rota: d.rota ? String(d.rota).trim() : null,
     data: d.data || new Date().toISOString().split('T')[0],
     hora: d.hora || '',
     tipo: d.tipo,
