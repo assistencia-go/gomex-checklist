@@ -2,7 +2,7 @@
 // GOMEX FROTA · SERVICE WORKER (OFFLINE FIRST & PWA)
 // ==============================================================================
 
-const CACHE_NAME = 'gomex-frota-v2.0';
+const CACHE_NAME = 'gomex-frota-v3.0';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
