@@ -87,8 +87,8 @@ const MIME_TYPES = {
 const server = http.createServer(async (req, res) => {
   // Configuração de CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, apikey');
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
@@ -111,7 +111,7 @@ const server = http.createServer(async (req, res) => {
   // GET /api/checklists (Listar vistorias para o SaaS)
   if (pathname === '/api/checklists' && req.method === 'GET') {
     try {
-      const response = await supabaseRequest('/rest/v1/veiculo_checklists?select=*&order=id.desc&limit=100');
+      const response = await supabaseRequest('/rest/v1/veiculo_checklists?select=id,numero,motorista,placa,rota,status&order=id.desc&limit=100');
       if (response.status >= 200 && response.status < 300 && Array.isArray(response.data)) {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(response.data));
@@ -125,6 +125,57 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'Erro ao buscar checklists' }));
     }
+    return;
+  }
+
+  // PATCH /api/checklists (Sincronizar rota do vendedor automaticamente no painel)
+  if (pathname === '/api/checklists' && req.method === 'PATCH') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const rota = (payload.rota || '').trim();
+        const motorista = (payload.motorista || '').trim();
+        const placa = (payload.placa || '').trim().toUpperCase();
+
+        if (!rota || (!motorista && !placa)) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Rota e motorista/placa são obrigatórios' }));
+          return;
+        }
+
+        let updatedCount = 0;
+        if (motorista) {
+          const rMot = await supabaseRequest(
+            `/rest/v1/veiculo_checklists?motorista=ilike.${encodeURIComponent(motorista)}`,
+            'PATCH',
+            { rota }
+          );
+          if (Array.isArray(rMot.data)) updatedCount += rMot.data.length;
+        }
+        if (updatedCount === 0 && placa) {
+          const rList = await supabaseRequest(
+            `/rest/v1/veiculo_checklists?select=id&placa=eq.${encodeURIComponent(placa)}&order=id.desc&limit=1`
+          );
+          if (Array.isArray(rList.data) && rList.data[0]?.id) {
+            await supabaseRequest(
+              `/rest/v1/veiculo_checklists?id=eq.${rList.data[0].id}`,
+              'PATCH',
+              { rota }
+            );
+            updatedCount = 1;
+          }
+        }
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, rota, updated: updatedCount }));
+      } catch (err) {
+        console.error('Erro na API /api/checklists (PATCH):', err);
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Payload inválido' }));
+      }
+    });
     return;
   }
 
@@ -143,6 +194,15 @@ const server = http.createServer(async (req, res) => {
 
         // Envia para o Supabase com autenticação segura
         const response = await supabaseRequest('/rest/v1/veiculo_checklists', 'POST', payload);
+
+        // Se o vendedor informou sua rota, atualiza também os registros anteriores dele no banco
+        if (payload.rota && payload.motorista) {
+          supabaseRequest(
+            `/rest/v1/veiculo_checklists?motorista=ilike.${encodeURIComponent(String(payload.motorista).trim())}`,
+            'PATCH',
+            { rota: String(payload.rota).trim() }
+          ).catch(() => {});
+        }
 
         if (response.status >= 200 && response.status < 300) {
           const row = Array.isArray(response.data) ? response.data[0] : response.data;
