@@ -298,6 +298,64 @@
     box-shadow: 0 4px 10px rgba(30, 42, 120, 0.25);
   }
 
+  /* Destaque do Campo Rota do Vendedor */
+  .rota-vendedor-box {
+    background: linear-gradient(135deg, #f0f4ff 0%, #f8faff 100%);
+    border: 1.5px solid #bfdbfe;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .rota-vendedor-box:focus-within {
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px rgba(30, 42, 120, 0.12);
+  }
+  .rota-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+  }
+  .rota-header-row label {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: var(--brand);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin: 0;
+  }
+  .rota-sync-pill {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 20px;
+    background: #dbeafe;
+    color: #1e40af;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all .2s;
+  }
+  .rota-sync-pill.synced {
+    background: #dcfce7;
+    color: #15803d;
+  }
+  .rota-sync-pill.syncing {
+    background: #fef3c7;
+    color: #b45309;
+  }
+  .rota-vendedor-box input {
+    background: #ffffff !important;
+    font-weight: 700;
+    color: var(--brand-dark);
+  }
+
   /* Itens de Verificação */
   .item-group {
     margin-top: 18px; margin-bottom: 8px;
@@ -713,9 +771,12 @@
         <input type="text" name="motorista" id="motorista" placeholder="Nome completo do motorista" autocapitalize="words">
       </div>
 
-      <div class="fld">
-        <label>Rota / Região Operacional</label>
-        <input type="text" name="rota" id="rota" placeholder="Ex: Rota 01 - Centro / Oeste, Rota Sul..." autocapitalize="words">
+      <div class="rota-vendedor-box">
+        <div class="rota-header-row">
+          <label for="rota">Rota do Vendedor *</label>
+          <span class="rota-sync-pill" id="rotaSyncStatus">Sincroniza c/ o Painel</span>
+        </div>
+        <input type="text" name="rota" id="rota" placeholder="Informe sua rota (Ex: 217, 240, 222)" autocapitalize="words">
       </div>
 
       <div class="two-cols">
@@ -2143,6 +2204,119 @@ async function gerarPdfOficial(d, numero) {
   return doc;
 }
 
+// Sincronização Automática da Rota do Vendedor com o Painel
+const VENDEDOR_PERFIL_KEY = 'gomex_vendedor_perfil_v1';
+const rotasPorMotorista = new Map();
+const rotasPorPlaca = new Map();
+const motoristaPorPlaca = new Map();
+let rotaSyncTimer = null;
+
+function atualizarStatusRotaUI(texto, classe = '') {
+  const pill = document.getElementById('rotaSyncStatus');
+  if (!pill) return;
+  pill.className = 'rota-sync-pill' + (classe ? ' ' + classe : '');
+  pill.textContent = texto;
+}
+
+async function carregarMapaRotasVendedores() {
+  try {
+    const res = await fetch('/api/checklists', { cache: 'no-store' });
+    if (!res.ok) return;
+    const rows = await res.json();
+    if (!Array.isArray(rows)) return;
+    rows.forEach(r => {
+      if (r.status === 'inativo') return;
+      const mot = (r.motorista || '').trim().toLowerCase();
+      const plc = (r.placa || '').trim().toUpperCase();
+      const rt = (r.rota || '').trim();
+      if (mot && rt && !rotasPorMotorista.has(mot)) {
+        rotasPorMotorista.set(mot, rt);
+      }
+      if (plc && rt && !rotasPorPlaca.has(plc)) {
+        rotasPorPlaca.set(plc, rt);
+      }
+      if (plc && r.motorista && !motoristaPorPlaca.has(plc)) {
+        motoristaPorPlaca.set(plc, r.motorista.trim());
+      }
+    });
+  } catch (e) {}
+}
+
+function tentarAutoPreencherRota() {
+  const inpRota = document.getElementById('rota');
+  const inpMot = document.getElementById('motorista');
+  const inpPlaca = document.getElementById('placa');
+  if (!inpRota) return;
+  if (inpRota.value.trim()) return;
+
+  const motKey = (inpMot?.value || '').trim().toLowerCase();
+  const plcKey = (inpPlaca?.value || '').trim().toUpperCase();
+
+  const rotaConhecida = (motKey && rotasPorMotorista.get(motKey)) || (plcKey && rotasPorPlaca.get(plcKey));
+  if (rotaConhecida) {
+    inpRota.value = rotaConhecida;
+    atualizarStatusRotaUI(`✓ Rota ${rotaConhecida} vinculada`, 'synced');
+    salvarRascunho();
+  }
+}
+
+async function sincronizarRotaNoPainel() {
+  const inpRota = document.getElementById('rota');
+  const inpMot = document.getElementById('motorista');
+  const inpPlaca = document.getElementById('placa');
+  if (!inpRota) return;
+
+  const rota = inpRota.value.trim();
+  const motorista = (inpMot?.value || '').trim();
+  const placa = (inpPlaca?.value || '').trim().toUpperCase();
+
+  try {
+    if (rota || motorista) {
+      localStorage.setItem(VENDEDOR_PERFIL_KEY, JSON.stringify({ motorista, rota, placa }));
+    }
+  } catch (e) {}
+
+  if (!rota || (!motorista && !placa)) {
+    atualizarStatusRotaUI('Sincroniza c/ o Painel', '');
+    return;
+  }
+
+  atualizarStatusRotaUI('⏳ Atualizando no painel...', 'syncing');
+  try {
+    const res = await fetch('/api/checklists', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ motorista, placa, rota })
+    });
+    if (res.ok) {
+      if (motorista) rotasPorMotorista.set(motorista.toLowerCase(), rota);
+      if (placa) rotasPorPlaca.set(placa, rota);
+      atualizarStatusRotaUI(`✓ Rota ${rota} no Painel`, 'synced');
+    } else {
+      atualizarStatusRotaUI('Salva ao enviar vistoria', '');
+    }
+  } catch (e) {
+    atualizarStatusRotaUI('Salva ao enviar vistoria', '');
+  }
+}
+
+document.getElementById('motorista')?.addEventListener('blur', tentarAutoPreencherRota);
+document.getElementById('placa')?.addEventListener('blur', tentarAutoPreencherRota);
+document.getElementById('rota')?.addEventListener('input', () => {
+  clearTimeout(rotaSyncTimer);
+  const val = document.getElementById('rota')?.value.trim();
+  if (!val) {
+    atualizarStatusRotaUI('Sincroniza c/ o Painel', '');
+    return;
+  }
+  atualizarStatusRotaUI('Digitando rota...', 'syncing');
+  rotaSyncTimer = setTimeout(sincronizarRotaNoPainel, 900);
+});
+document.getElementById('rota')?.addEventListener('change', () => {
+  clearTimeout(rotaSyncTimer);
+  sincronizarRotaNoPainel();
+});
+
 // Envio Seguro de Dados (Via Backend Server com Fallback Local)
 document.getElementById('btnSalvar').addEventListener('click', async () => {
   const d = coletarDadosFormulario();
@@ -2152,6 +2326,7 @@ document.getElementById('btnSalvar').addEventListener('click', async () => {
   if (!d.placa) pendencias.push('Informe a Placa');
   if (!d.km) pendencias.push('Informe o Km Atual');
   if (!d.motorista) pendencias.push('Informe o Motorista / Vendedor');
+  if (!d.rota || !String(d.rota).trim()) pendencias.push('Informe a Rota do Vendedor');
   if (!d.tipo) pendencias.push('Informe o Tipo de Vistoria');
   if (!d.comb) pendencias.push('Informe o Nível de Combustível');
   if (!d.liberacao) pendencias.push('Defina a Liberação do Veículo');
@@ -2358,6 +2533,14 @@ function setarDataHoraAtual() {
 setarDataHoraAtual();
 setarDataHero();
 restaurarRascunho();
+carregarMapaRotasVendedores().then(() => {
+  const rVal = document.getElementById('rota')?.value.trim();
+  if (rVal) {
+    atualizarStatusRotaUI(`✓ Rota ${rVal}`, 'synced');
+  } else {
+    tentarAutoPreencherRota();
+  }
+});
 </script>
 </body>
 </html>
