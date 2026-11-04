@@ -774,7 +774,6 @@
       <div class="rota-vendedor-box">
         <div class="rota-header-row">
           <label for="rota">Rota do Vendedor *</label>
-          <span class="rota-sync-pill" id="rotaSyncStatus">Sincroniza c/ o Painel</span>
         </div>
         <input type="text" name="rota" id="rota" placeholder="Informe sua rota (Ex: 217, 240, 222)" autocapitalize="words">
       </div>
@@ -2211,11 +2210,8 @@ const rotasPorPlaca = new Map();
 const motoristaPorPlaca = new Map();
 let rotaSyncTimer = null;
 
-function atualizarStatusRotaUI(texto, classe = '') {
-  const pill = document.getElementById('rotaSyncStatus');
-  if (!pill) return;
-  pill.className = 'rota-sync-pill' + (classe ? ' ' + classe : '');
-  pill.textContent = texto;
+function atualizarStatusRotaUI() {
+  // Indicador visual removido do front-end; sincronização ocorre de forma silenciosa em segundo plano
 }
 
 async function carregarMapaRotasVendedores() {
