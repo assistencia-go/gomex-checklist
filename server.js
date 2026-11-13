@@ -44,7 +44,7 @@ function supabaseRequest(endpoint, method = 'GET', data = null) {
         'apikey': SUPABASE_KEY,
         'Authorization': `Bearer ${SUPABASE_KEY}`,
         'Content-Type': 'application/json',
-        'Prefer': 'return=representation'
+        'Prefer': 'resolution=merge-duplicates,return=representation'
       }
     };
 
@@ -218,6 +218,64 @@ const server = http.createServer(async (req, res) => {
         console.error('Erro na API /api/checklists (POST):', err);
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Payload inválido' }));
+      }
+    });
+    return;
+  }
+
+  // POST /api/fotos-galeria (Salvar fotos da vistoria diretamente na galeria do painel)
+  if (pathname === '/api/fotos-galeria' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const fotos = Array.isArray(payload.fotos) ? payload.fotos : [];
+        if (!fotos.length) {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, count: 0 }));
+          return;
+        }
+
+        // 1. Obter galeria atual do Supabase (tabela parametros)
+        const getRes = await supabaseRequest('/rest/v1/parametros?id=eq.frota_galeria_veiculos_v1&select=*');
+        let galeriaAtual = [];
+        if (getRes.status >= 200 && getRes.status < 300 && Array.isArray(getRes.data) && getRes.data[0]?.descricao) {
+          try { galeriaAtual = JSON.parse(getRes.data[0].descricao) || []; } catch(e) {}
+        }
+
+        // 2. Prepend das novas fotos da vistoria
+        const baseTs = Date.now();
+        const novasFotos = fotos.map((f, idx) => ({
+          id: 'foto_chk_' + (baseTs + idx) + '_' + Math.random().toString(36).slice(2, 6),
+          created_ts: baseTs + idx,
+          placa: (f.placa || payload.placa || '').toUpperCase().trim(),
+          veiculo: f.veiculo || payload.veiculo || 'Veículo da Frota',
+          data: f.data || payload.data || new Date().toISOString().split('T')[0],
+          motorista: f.motorista || payload.motorista || 'Vistoriador',
+          categoria: f.categoria || 'Vistoria / Pneus e Avarias',
+          km: f.km || payload.km || null,
+          obs: f.obs || ('Check-list Nº ' + (payload.numero || 'Oficial')),
+          imagem: f.dataUrl || f.imagem,
+          registrado_por: 'Check-list App (' + (f.motorista || payload.motorista || 'Motorista') + ')'
+        }));
+
+        const galeriaAtualizada = [...novasFotos, ...galeriaAtual];
+        if (galeriaAtualizada.length > 200) galeriaAtualizada.length = 200;
+
+        // 3. Upsert no Supabase
+        await supabaseRequest('/rest/v1/parametros', 'POST', {
+          id: 'frota_galeria_veiculos_v1',
+          valor: galeriaAtualizada.length,
+          descricao: JSON.stringify(galeriaAtualizada)
+        });
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, count: novasFotos.length }));
+      } catch (err) {
+        console.error('Erro ao salvar fotos da vistoria na galeria:', err);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
       }
     });
     return;
