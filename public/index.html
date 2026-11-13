@@ -660,6 +660,589 @@
   }
 
   .hidden { display: none !important; }
+
+  /* ============================================================================== */
+  /* NOVO SISTEMA DE ETAPAS (WIZARD STEPPER) & CAPTURA DE FOTOS DA FROTA            */
+  /* ============================================================================== */
+  .stepper-wrap {
+    background: #ffffff;
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--line);
+    position: sticky;
+    top: 54px;
+    z-index: 30;
+  }
+  .stepper-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .stepper-badge {
+    background: var(--brand);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+  }
+  .stepper-title {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--brand-dark);
+    text-align: right;
+  }
+  .stepper-progress {
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  .stepper-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #1e2a78 0%, #2A3492 50%, #34d399 100%);
+    border-radius: 4px;
+    transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .stepper-pills {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .stepper-pills::-webkit-scrollbar { display: none; }
+  .step-pill {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 5px 11px;
+    font-size: 11.5px;
+    color: #64748b;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .step-pill span {
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    background: #cbd5e1;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 800;
+  }
+  .step-pill.active {
+    background: #1e2a78;
+    color: #fff;
+    border-color: #1e2a78;
+    box-shadow: 0 2px 8px rgba(30, 42, 120, 0.2);
+  }
+  .step-pill.active span {
+    background: #34d399;
+    color: #090e24;
+  }
+  .step-pill.completed {
+    background: #f0fdf4;
+    color: #15803d;
+    border-color: #bbf7d0;
+  }
+  .step-pill.completed span {
+    background: #15803d;
+    color: #fff;
+  }
+
+  /* Cartões das Etapas */
+  .step-card {
+    display: none;
+    animation: stepFadeIn 0.25s ease-out;
+  }
+  .step-card.active {
+    display: block !important;
+  }
+  @keyframes stepFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Caixas de Captura de Foto */
+  .photo-capture-box {
+    margin-top: 18px;
+    padding: 16px;
+    background: #f8fafc;
+    border: 1.5px dashed #cbd5e1;
+    border-radius: 12px;
+  }
+  .photo-capture-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--brand-dark);
+    margin-bottom: 4px;
+  }
+  .photo-capture-sub {
+    font-size: 12px;
+    color: #64748b;
+    margin: 0 0 12px 0;
+    line-height: 1.4;
+  }
+  .photo-btn-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .btn-camera, .btn-gallery {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+  .btn-camera {
+    background: #1e2a78;
+    color: #fff;
+    border: none;
+    box-shadow: 0 2px 6px rgba(30, 42, 120, 0.15);
+  }
+  .btn-camera:hover { background: #2A3492; }
+  .btn-gallery {
+    background: #fff;
+    color: #1e2a78;
+    border: 1.5px solid #1e2a78;
+  }
+  .btn-gallery:hover { background: #f0f4ff; }
+
+  /* Grid de Miniaturas de Fotos */
+  .photo-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .photo-thumb-item {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    aspect-ratio: 1;
+    background: #000;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+  .photo-thumb-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .photo-thumb-del {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(220, 38, 38, 0.9);
+    color: #fff;
+    border: none;
+    font-size: 14px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .photo-thumb-tag {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+    font-size: 9.5px;
+    font-weight: 700;
+    padding: 2px 4px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Etapa 7: Resumo de Revisão */
+  .review-summary-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .review-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid #eef2f7;
+    font-size: 13px;
+  }
+  .review-row:last-child { border-bottom: none; }
+  .review-label { color: #64748b; font-weight: 500; }
+  .review-val { font-weight: 700; color: #111827; text-align: right; }
+
+  /* Destaque para campos obrigatórios faltando */
+  .field-error {
+    border-color: #dc2626 !important;
+    background: #fef2f2 !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15) !important;
+    animation: shakeErr 0.3s ease-in-out;
+  }
+  @keyframes shakeErr {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+
+  /* Sistema de Notificação Toast Nativo (Substituto do alert do navegador) */
+  .sys-toast-container {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 999999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: calc(100% - 32px);
+    max-width: 440px;
+    pointer-events: none;
+  }
+  .sys-toast {
+    pointer-events: auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 13px 16px;
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.22), 0 2px 6px rgba(15, 23, 42, 0.08);
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    color: #1e293b;
+    font-family: inherit;
+    animation: sysToastSlideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    transition: all 0.22s ease;
+  }
+  .sys-toast.hiding {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.96);
+  }
+  @keyframes sysToastSlideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-24px) scale(0.94);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  .sys-toast-icon {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+  }
+  .sys-toast-body {
+    flex: 1;
+    min-width: 0;
+  }
+  .sys-toast-title {
+    font-weight: 800;
+    font-size: 13px;
+    margin-bottom: 2px;
+    letter-spacing: -0.2px;
+  }
+  .sys-toast-msg {
+    font-size: 13px;
+    color: #475569;
+    line-height: 1.45;
+    white-space: pre-line;
+  }
+  .sys-toast-close {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 2px 4px;
+    font-size: 18px;
+    line-height: 1;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s;
+  }
+  .sys-toast-close:hover {
+    color: #0f172a;
+  }
+
+  .sys-toast.warning {
+    border-left: 5px solid #f59e0b;
+    background: #fffbeb;
+  }
+  .sys-toast.warning .sys-toast-icon {
+    background: #fef3c7;
+    color: #d97706;
+  }
+  .sys-toast.warning .sys-toast-title {
+    color: #b45309;
+  }
+
+  .sys-toast.error {
+    border-left: 5px solid #ef4444;
+    background: #fef2f2;
+  }
+  .sys-toast.error .sys-toast-icon {
+    background: #fee2e2;
+    color: #dc2626;
+  }
+  .sys-toast.error .sys-toast-title {
+    color: #b91c1c;
+  }
+
+  .sys-toast.success {
+    border-left: 5px solid #10b981;
+    background: #f0fdf4;
+  }
+  .sys-toast.success .sys-toast-icon {
+    background: #dcfce7;
+    color: #15803d;
+  }
+  .sys-toast.success .sys-toast-title {
+    color: #15803d;
+  }
+
+  .sys-toast.info {
+    border-left: 5px solid #2563eb;
+    background: #eff6ff;
+  }
+  .sys-toast.info .sys-toast-icon {
+    background: #dbeafe;
+    color: #2563eb;
+  }
+  .sys-toast.info .sys-toast-title {
+    color: #1d4ed8;
+  }
+
+
+  /* Layout Mobile App Nativo */
+  header.app-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: linear-gradient(135deg, #090e24 0%, #1e2a78 60%, #2A3492 100%);
+    color: #fff;
+    padding: 10px 14px 8px;
+    box-shadow: 0 4px 18px rgba(9, 14, 36, 0.25);
+  }
+  .app-header .header-wrap {
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .app-header .logo-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+  .app-header .logo-icon-wrap {
+    width: 34px;
+    height: 34px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .app-header .title-box {
+    min-width: 0;
+  }
+  .app-header .title-box h1 {
+    font-size: 14.5px;
+    margin: 0;
+    font-weight: 800;
+    letter-spacing: -0.2px;
+    line-height: 1.2;
+    color: #ffffff;
+  }
+  .app-header .title-box span {
+    font-size: 11px;
+    color: #93c5fd;
+    display: block;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .header-step-badge {
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .app-prog-track {
+    max-width: 800px;
+    margin: 8px auto 6px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .app-prog-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #38bdf8 0%, #34d399 100%);
+    border-radius: 3px;
+    transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .stepper-pills {
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .stepper-pills::-webkit-scrollbar { display: none; }
+  .step-pill {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 16px;
+    padding: 4px 10px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.85);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .step-pill span {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.25);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9.5px;
+    font-weight: 800;
+  }
+  .step-pill.active {
+    background: #ffffff;
+    color: #090e24;
+    border-color: #ffffff;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+  .step-pill.active span {
+    background: #1e2a78;
+    color: #ffffff;
+  }
+  .step-pill.completed {
+    background: rgba(52, 211, 153, 0.22);
+    color: #a7f3d0;
+    border-color: rgba(52, 211, 153, 0.4);
+  }
+  .step-pill.completed span {
+    background: #34d399;
+    color: #090e24;
+  }
+
+  /* Micro badges de status sem emojis */
+  .badge-sig {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 9px;
+    border-radius: 6px;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: -0.1px;
+  }
+  .badge-sig.ok {
+    background: #dcfce7;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+  }
+  .badge-sig.pending {
+    background: #fef3c7;
+    color: #b45309;
+    border: 1px solid #fde68a;
+  }
+  .badge-sig.optional {
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+  }
+
+  /* Spinner suave para botões */
+  .spinner-sm {
+    width: 15px;
+    height: 15px;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
 </style>
 </head>
 <body>
@@ -683,12 +1266,12 @@
 </div>
 
 
-<!-- Cabeçalho Principal -->
-<header>
+<!-- Cabeçalho de Aplicativo Mobile Nativo -->
+<header class="app-header">
   <div class="header-wrap">
     <div class="logo-box">
-      <div class="logo-icon-wrap" style="width:38px;height:38px;background:linear-gradient(135deg, rgba(255,255,255,0.28), rgba(255,255,255,0.1));border:1px solid rgba(255,255,255,0.35);border-radius:10px;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.15)">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <div class="logo-icon-wrap">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/>
           <path d="M15 18H9"/>
           <path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/>
@@ -698,12 +1281,27 @@
       </div>
       <div class="title-box">
         <h1>Gomex Frota</h1>
-        <span id="headerSub">Check-list de Vistoria Veicular</span>
+        <span id="stepTitle">Identificação do Veículo</span>
       </div>
     </div>
+    <div class="header-step-badge" id="stepBadge">Etapa 1 de 7</div>
   </div>
 
-  <div class="prog-bar" id="progWrap" style="margin-top:10px"><i id="progBar"></i></div>
+  <!-- Barra de Progresso Única e Contínua (App Style) -->
+  <div class="app-prog-track">
+    <div class="app-prog-fill" id="stepProgressFill" style="width: 14.28%;"></div>
+  </div>
+
+  <!-- Pílulas de Etapas Roláveis (Compactas) -->
+  <div class="stepper-pills" id="stepperPills">
+    <button type="button" class="step-pill active" onclick="irParaEtapa(1)"><span>1</span><b>Veículo</b></button>
+    <button type="button" class="step-pill" onclick="irParaEtapa(2)"><span>2</span><b>Avarias</b></button>
+    <button type="button" class="step-pill" onclick="irParaEtapa(3)"><span>3</span><b>Pneus</b></button>
+    <button type="button" class="step-pill" onclick="irParaEtapa(4)"><span>4</span><b>Itens</b></button>
+    <button type="button" class="step-pill" onclick="irParaEtapa(5)"><span>5</span><b>Liberação</b></button>
+    <button type="button" class="step-pill" onclick="irParaEtapa(6)"><span>6</span><b>Assinaturas</b></button>
+    <button type="button" class="step-pill" onclick="irParaEtapa(7)"><span>7</span><b>Revisão</b></button>
+  </div>
 </header>
 
 <!-- ============================================================================== -->
@@ -711,32 +1309,14 @@
 <!-- ============================================================================== -->
 <div id="viewForm" class="main-wrap">
 
-  <!-- Cartão de Introdução e Boas-Vindas -->
-  <div class="intro-hero-card">
-    <div class="intro-hero-badge">
-      <span class="live-dot"></span>
-      <span>Vistoria Veicular Gomex</span>
-    </div>
-    <h2 class="intro-hero-title">Nova Inspeção de Frota</h2>
-    <p class="intro-hero-desc">
-      Realize a conferência completa dos itens de segurança, pneus e carroceria antes da liberação do veículo.
-    </p>
-    <div class="intro-pills">
-      <div class="intro-pill">
-        <span class="pill-title">Data de Hoje</span>
-        <span class="pill-val" id="introDatePill">--/--/----</span>
-      </div>
-      <div class="intro-pill">
-        <span class="pill-title">Progresso</span>
-        <span class="pill-val" id="introProgPill">0% Concluído</span>
-      </div>
-    </div>
-  </div>
+  <!-- Inputs Ocultos para Câmera e Galeria de Fotos da Frota -->
+  <input type="file" id="inpFotoCamera" accept="image/*" capture="environment" style="display:none">
+  <input type="file" id="inpFotoGaleria" accept="image/*" multiple style="display:none">
 
   <form id="frm" autocomplete="off" onsubmit="return false">
 
     <!-- 1. Identificação -->
-    <section class="card">
+    <section class="card step-card active" id="step1" data-step="1">
       <div class="card-header">
         <h2><span class="badge">1</span> Identificação do Veículo</h2>
         <span id="contBadge" style="font-size:12.5px;font-weight:700;color:var(--brand)">0/30 itens</span>
@@ -828,7 +1408,7 @@
     </section>
 
     <!-- 2. Avarias na Carroceria -->
-    <section class="card">
+    <section class="card step-card" id="step2" data-step="2">
       <div class="card-header">
         <h2><span class="badge">2</span> Avarias na Carroceria</h2>
         <span style="font-size:12px;color:var(--mute);font-weight:600" id="avariasCount">0 marcas</span>
@@ -920,10 +1500,30 @@
           <span>Sem avarias novas desde a última vistoria</span>
         </label>
       </div>
+
+      <!-- Captura de Fotos de Avarias -->
+      <div class="photo-capture-box">
+        <div class="photo-capture-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <b>Fotos das Avarias na Carroceria (Opcional)</b>
+        </div>
+        <p class="photo-capture-sub">Fotografe riscos, amassados ou avarias na lataria para comprovação no laudo da vistoria.</p>
+        <div class="photo-btn-row">
+          <button type="button" class="btn-camera" onclick="acionarCapturaFoto('Avarias na Carroceria', true)">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <span>Tirar Foto (Câmera)</span>
+          </button>
+          <button type="button" class="btn-gallery" onclick="acionarCapturaFoto('Avarias na Carroceria', false)">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span>Anexar da Galeria</span>
+          </button>
+        </div>
+        <div id="previewAvariasFotos" class="photo-preview-grid"></div>
+      </div>
     </section>
 
     <!-- 3. Pneus -->
-    <section class="card">
+    <section class="card step-card" id="step3" data-step="3">
       <div class="card-header">
         <h2><span class="badge">3</span> Pneus e Calibragem</h2>
       </div>
@@ -1002,10 +1602,30 @@
           <label><input type="radio" name="pneu_dano" value="Sim"><span>Sim (descrever em Obs.)</span></label>
         </div>
       </div>
+
+      <!-- Captura de Fotos dos Pneus -->
+      <div class="photo-capture-box">
+        <div class="photo-capture-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <b>Fotos dos Pneus e Rodas (Opcional)</b>
+        </div>
+        <p class="photo-capture-sub">Fotografe pneus desgastados, estepe, bolhas ou irregularidades para comprovação no laudo.</p>
+        <div class="photo-btn-row">
+          <button type="button" class="btn-camera" onclick="acionarCapturaFoto('Pneus e Rodas', true)">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <span>Tirar Foto (Câmera)</span>
+          </button>
+          <button type="button" class="btn-gallery" onclick="acionarCapturaFoto('Pneus e Rodas', false)">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span>Anexar da Galeria</span>
+          </button>
+        </div>
+        <div id="previewPneusFotos" class="photo-preview-grid"></div>
+      </div>
     </section>
 
     <!-- 4. Itens de Verificação -->
-    <section class="card">
+    <section class="card step-card" id="step4" data-step="4">
       <div class="card-header">
         <h2><span class="badge">4</span> Itens de Verificação</h2>
       </div>
@@ -1173,19 +1793,10 @@
       </div>
     </section>
 
-    <!-- 5. Observações -->
-    <section class="card">
+    <!-- 5. Condição, Liberação e Observações -->
+    <section class="card step-card" id="step5" data-step="5">
       <div class="card-header">
-        <h2><span class="badge">5</span> Observações / Problemas</h2>
-      </div>
-      <p class="hint">Descreva aqui todo item marcado como <b>Não OK</b> ou detalhes importantes para manutenção.</p>
-      <textarea name="obs" id="obs" placeholder="Ex.: Lâmpada de freio traseiro esquerdo queimada, aguardando substituição."></textarea>
-    </section>
-
-    <!-- 6. Condição e Liberação -->
-    <section class="card">
-      <div class="card-header">
-        <h2><span class="badge">6</span> Condição & Liberação</h2>
+        <h2><span class="badge">5</span> Condição & Liberação</h2>
       </div>
 
       <div class="fld">
@@ -1204,12 +1815,18 @@
           <label><input type="radio" name="liberacao" value="Não liberado"><span>Não liberado</span></label>
         </div>
       </div>
+
+      <div class="fld" style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line);">
+        <label>Observações / Problemas (Opcional)</label>
+        <p class="hint" style="margin:0 0 8px 0">Descreva itens Não OK, avarias relevantes ou observações para a oficina.</p>
+        <textarea name="obs" id="obs" placeholder="Ex.: Lâmpada de freio traseiro esquerdo queimada, aguardando substituição."></textarea>
+      </div>
     </section>
 
-    <!-- 7. Assinaturas Digitais em Modo Horizontal -->
-    <section class="card">
+    <!-- 6. Assinaturas Digitais em Modo Horizontal -->
+    <section class="card step-card" id="step6" data-step="6">
       <div class="card-header">
-        <h2><span class="badge">7</span> Assinaturas Digitais</h2>
+        <h2><span class="badge">6</span> Assinaturas Digitais</h2>
       </div>
       <p class="hint">Toque em <b>Assinar</b>. A tela abrirá em modo horizontal amplo para facilitar a assinatura precisa com o dedo.</p>
 
@@ -1253,21 +1870,55 @@
       </div>
     </section>
 
+    <!-- 7. Revisão e Finalização -->
+    <section class="card step-card" id="step7" data-step="7">
+      <div class="card-header">
+        <h2><span class="badge">7</span> Revisão & Finalização</h2>
+      </div>
+      <p class="hint">Confira os dados da vistoria e as fotos anexadas antes de gerar o laudo oficial em PDF e registrar no banco de dados.</p>
+
+      <div class="review-summary-card">
+        <h4 style="margin:0 0 12px;font-size:14px;color:var(--brand-dark);display:flex;align-items:center;gap:6px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          <span>Resumo dos Dados</span>
+        </h4>
+        <div id="reviewSummaryContent">
+          <!-- Gerado dinamicamente -->
+        </div>
+      </div>
+
+      <div class="photo-capture-box" style="margin-top:0">
+        <div class="photo-capture-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <b>Fotos Anexadas à Vistoria</b>
+        </div>
+        <p class="photo-capture-sub">Registro fotográfico comprobatório anexado a esta vistoria.</p>
+        <div id="previewRevisaoFotos" class="photo-preview-grid">
+          <span style="font-size:12px;color:var(--mute);grid-column:1/-1">Nenhuma foto anexada (as fotos são opcionais).</span>
+        </div>
+      </div>
+    </section>
+
   </form>
 
 </div>
 
-<!-- Barra de Ações Fixa no Rodapé (Formulário) -->
+<!-- Barra de Ações Fixa no Rodapé (Formulário por Etapas) -->
 <div class="bottom-bar" id="formBottomBar">
   <div class="bottom-bar-inner">
-    <button type="button" class="btn-action btn-secondary-action" id="btnLimpar" style="display:inline-flex;align-items:center;justify-content:center;gap:6px">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-      <span>Limpar</span>
+    <button type="button" class="btn-action btn-secondary-action" id="btnPassoAnterior" onclick="voltarEtapa()" style="display:none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      <span>Voltar</span>
     </button>
-    <button type="button" class="btn-action btn-primary-action" id="btnSalvar">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+    <button type="button" class="btn-action btn-primary-action" id="btnProximoPasso" onclick="avancarEtapa()">
+      <span>Próxima Etapa</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+    <button type="button" class="btn-action btn-primary-action" id="btnSalvar" style="display:none;background:var(--ok)">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
       <span>Salvar Check-list & Gerar PDF</span>
     </button>
+    <button type="button" id="btnLimpar" style="display:none"></button>
   </div>
 </div>
 
@@ -1379,6 +2030,458 @@
 <!-- JAVASCRIPT: LÓGICA DO CLIENTE (SEM CREDENCIAIS OU SQL EXPOSTOS) -->
 <!-- ============================================================================== -->
 <script>
+
+// ==============================================================================
+// SISTEMA DE NOTIFICAÇÕES DO SISTEMA (SUBSTITUI OS ALERTAS DO NAVEGADOR)
+// ==============================================================================
+function mostrarNotificacao(mensagem, tipo = 'warning', duracao = 4500) {
+  let container = document.getElementById('sysToastContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'sysToastContainer';
+    container.className = 'sys-toast-container';
+    document.body.appendChild(container);
+  }
+
+  container.innerHTML = '';
+
+  const toast = document.createElement('div');
+  toast.className = 'sys-toast ' + tipo;
+
+  const iconSvg = {
+    warning: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+    error: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+    success: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+    info: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+  }[tipo] || '';
+
+  const titulos = {
+    warning: 'Atenção',
+    error: 'Atenção',
+    success: 'Sucesso',
+    info: 'Aviso do Sistema'
+  };
+
+  toast.innerHTML = `
+    <div class="sys-toast-icon">${iconSvg}</div>
+    <div class="sys-toast-body">
+      <div class="sys-toast-title">${titulos[tipo] || 'Atenção'}</div>
+      <div class="sys-toast-msg">${mensagem}</div>
+    </div>
+    <button type="button" class="sys-toast-close" title="Fechar">&times;</button>
+  `;
+
+  const btnClose = toast.querySelector('.sys-toast-close');
+  btnClose.onclick = () => fecharToast(toast);
+
+  container.appendChild(toast);
+
+  if ('vibrate' in navigator && tipo === 'warning') {
+    try { navigator.vibrate(80); } catch (e) {}
+  }
+
+  let autoTimer = setTimeout(() => fecharToast(toast), duracao);
+
+  function fecharToast(el) {
+    clearTimeout(autoTimer);
+    el.classList.add('hiding');
+    setTimeout(() => {
+      if (el.parentNode) el.parentNode.removeChild(el);
+    }, 220);
+  }
+}
+
+// Sobrescreve window.alert globalmente para NUNCA exibir o popup padrão do Google Chrome
+window.alert = function(msg) {
+  mostrarNotificacao(msg, 'warning');
+};
+
+function destacarCampoErro(elementoOuContainer) {
+  if (!elementoOuContainer) return;
+  elementoOuContainer.classList.add('field-error');
+  elementoOuContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  setTimeout(() => {
+    elementoOuContainer.classList.remove('field-error');
+  }, 2500);
+}
+
+// ==============================================================================
+// GESTÃO DO STEPPER (FLUXO POR ETAPAS) & FOTOS DA VISTORIA
+// ==============================================================================
+let etapaAtual = 1;
+const TOTAL_ETAPAS = 7;
+const ETAPAS_INFO = [
+  { num: 1, nome: 'Veículo', desc: 'Identificação do Veículo' },
+  { num: 2, nome: 'Avarias', desc: 'Avarias na Carroceria' },
+  { num: 3, nome: 'Pneus', desc: 'Pneus e Calibragem' },
+  { num: 4, nome: 'Itens', desc: 'Itens de Verificação' },
+  { num: 5, nome: 'Liberação', desc: 'Condição, Liberação & Observações' },
+  { num: 6, nome: 'Assinaturas', desc: 'Assinaturas Digitais' },
+  { num: 7, nome: 'Revisão', desc: 'Revisão & Finalização' }
+];
+
+let fotosVistoria = [];
+let categoriaFotoAtual = 'Avarias na Carroceria';
+
+function validarEtapa(etapa) {
+  if (etapa === 1) {
+    const veicRadio = frm.querySelector('input[name="veiculo"]:checked');
+    if (!veicRadio) {
+      mostrarNotificacao('Selecione o modelo do veículo antes de avançar.', 'warning');
+      destacarCampoErro(frm.querySelector('input[name="veiculo"]')?.closest('.fld'));
+      return false;
+    }
+    if (veicRadio.value === 'Outro') {
+      const vOutro = (document.getElementById('veiculoOutro')?.value || '').trim();
+      if (!vOutro) {
+        mostrarNotificacao('Informe qual é o veículo no campo "Outro".', 'warning');
+        const inp = document.getElementById('veiculoOutro');
+        inp?.focus();
+        destacarCampoErro(inp);
+        return false;
+      }
+    }
+    const inpPlaca = frm.querySelector('input[name="placa"]');
+    const placa = (inpPlaca?.value || '').trim();
+    if (!placa) {
+      mostrarNotificacao('Informe a placa do veículo.', 'warning');
+      inpPlaca?.focus();
+      destacarCampoErro(inpPlaca);
+      return false;
+    }
+    const inpKm = frm.querySelector('input[name="km"]');
+    const km = (inpKm?.value || '').trim();
+    if (!km || Number(km) <= 0) {
+      mostrarNotificacao('Informe a quilometragem (Km) atual do veículo.', 'warning');
+      inpKm?.focus();
+      destacarCampoErro(inpKm);
+      return false;
+    }
+    const inpMotorista = frm.querySelector('input[name="motorista"]');
+    const motorista = (inpMotorista?.value || '').trim();
+    if (!motorista) {
+      mostrarNotificacao('Informe o nome do vendedor / motorista.', 'warning');
+      inpMotorista?.focus();
+      destacarCampoErro(inpMotorista);
+      return false;
+    }
+    const inpRota = frm.querySelector('input[name="rota"]');
+    const rota = (inpRota?.value || '').trim();
+    if (!rota) {
+      mostrarNotificacao('Informe ou selecione a rota do vendedor.', 'warning');
+      inpRota?.focus();
+      destacarCampoErro(inpRota);
+      return false;
+    }
+    const tipoRadio = frm.querySelector('input[name="tipo"]:checked');
+    if (!tipoRadio) {
+      mostrarNotificacao('Selecione o tipo de vistoria (Saída, Retorno ou Periódica).', 'warning');
+      destacarCampoErro(frm.querySelector('input[name="tipo"]')?.closest('.fld'));
+      return false;
+    }
+    const combRadio = frm.querySelector('input[name="comb"]:checked');
+    if (!combRadio) {
+      mostrarNotificacao('Selecione o nível de combustível.', 'warning');
+      destacarCampoErro(frm.querySelector('input[name="comb"]')?.closest('.fld'));
+      return false;
+    }
+  }
+
+  if (etapa === 5) {
+    const libRadio = frm.querySelector('input[name="liberacao"]:checked');
+    if (!libRadio) {
+      mostrarNotificacao('Defina a condição de liberação do veículo (Liberado / Com Restrição / Não Liberado).', 'warning');
+      destacarCampoErro(frm.querySelector('input[name="liberacao"]')?.closest('.fld'));
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function irParaEtapa(n, validar = true) {
+  if (n < 1) n = 1;
+  if (n > TOTAL_ETAPAS) n = TOTAL_ETAPAS;
+
+  if (validar && n > etapaAtual) {
+    if (!validarEtapa(etapaAtual)) return;
+  }
+
+  etapaAtual = n;
+
+  // 1. Atualizar visibilidade dos cards das etapas
+  document.querySelectorAll('.step-card').forEach(card => {
+    const stepNum = Number(card.dataset.step || card.id.replace('step', ''));
+    if (stepNum === n) {
+      card.classList.add('active');
+    } else {
+      card.classList.remove('active');
+    }
+  });
+
+  // 2. Atualizar pills do cabeçalho
+  const pills = document.querySelectorAll('#stepperPills .step-pill');
+  pills.forEach((pill, idx) => {
+    const s = idx + 1;
+    pill.classList.remove('active', 'completed');
+    if (s === n) {
+      pill.classList.add('active');
+    } else if (s < n) {
+      pill.classList.add('completed');
+    }
+  });
+
+  // 3. Atualizar barra de progresso e textos do cabeçalho
+  const stepBadge = document.getElementById('stepBadge');
+  const stepTitle = document.getElementById('stepTitle');
+  const stepProgressFill = document.getElementById('stepProgressFill');
+
+  if (stepBadge) stepBadge.textContent = 'Etapa ' + n + ' de ' + TOTAL_ETAPAS;
+  if (stepTitle) stepTitle.textContent = ETAPAS_INFO[n - 1].desc;
+  if (stepProgressFill) {
+    const pct = ((n - 1) / (TOTAL_ETAPAS - 1)) * 100;
+    stepProgressFill.style.width = Math.max(14.28, pct) + '%';
+  }
+
+  // 4. Atualizar botões de navegação no rodapé
+  const btnAnt = document.getElementById('btnPassoAnterior');
+  const btnProx = document.getElementById('btnProximoPasso');
+  const btnSalvar = document.getElementById('btnSalvar');
+
+  if (btnAnt) {
+    btnAnt.style.display = (n === 1) ? 'none' : 'inline-flex';
+  }
+  if (btnProx) {
+    btnProx.style.display = (n === TOTAL_ETAPAS) ? 'none' : 'inline-flex';
+  }
+  if (btnSalvar) {
+    btnSalvar.style.display = (n === TOTAL_ETAPAS) ? 'inline-flex' : 'none';
+  }
+
+  // 5. Se for a etapa de revisão, atualizar resumo
+  if (n === TOTAL_ETAPAS) {
+    renderizarResumoRevisao();
+  }
+
+  // 6. Scroll suave para o início da página
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function avancarEtapa() {
+  if (etapaAtual < TOTAL_ETAPAS) {
+    irParaEtapa(etapaAtual + 1, true);
+  }
+}
+
+function voltarEtapa() {
+  if (etapaAtual > 1) {
+    irParaEtapa(etapaAtual - 1, false);
+  }
+}
+
+// ------------------------------------------------------------------------------
+// FOTOS: CAPTURA, COMPRESSÃO EM CANVAS & PREVIEWS
+// ------------------------------------------------------------------------------
+function comprimirFoto(file, maxDim = 1100, quality = 0.78) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = e => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        let w = img.width;
+        let h = img.height;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) {
+            h = Math.round((h * maxDim) / w);
+            w = maxDim;
+          } else {
+            w = Math.round((w * maxDim) / h);
+            h = maxDim;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(dataUrl);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function acionarCapturaFoto(categoria, isCamera = false) {
+  categoriaFotoAtual = categoria;
+  const input = isCamera ? document.getElementById('inpFotoCamera') : document.getElementById('inpFotoGaleria');
+  if (input) {
+    input.value = '';
+    input.click();
+  }
+}
+
+async function onFotosSelecionadas(fileList) {
+  if (!fileList || !fileList.length) return;
+  for (let i = 0; i < fileList.length; i++) {
+    const file = fileList[i];
+    try {
+      const dataUrl = await comprimirFoto(file);
+      const id = 'foto_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+      fotosVistoria.push({
+        id,
+        categoria: categoriaFotoAtual,
+        dataUrl,
+        nome: file.name,
+        ts: Date.now()
+      });
+    } catch (err) {
+      console.error('Erro comprimindo foto:', err);
+    }
+  }
+  renderizarPreviewsFotos();
+  salvarRascunho();
+}
+
+function removerFotoVistoria(id) {
+  fotosVistoria = fotosVistoria.filter(f => f.id !== id);
+  renderizarPreviewsFotos();
+  salvarRascunho();
+}
+
+function renderizarPreviewsFotos() {
+  const fotosAvarias = fotosVistoria.filter(f => f.categoria.includes('Avaria') || f.categoria === 'Avarias na Carroceria');
+  const fotosPneus = fotosVistoria.filter(f => f.categoria.includes('Pneu') || f.categoria === 'Pneus e Rodas');
+
+  const htmlItem = f => `
+    <div class="photo-preview-item">
+      <img src="${f.dataUrl}" alt="${f.categoria}">
+      <span class="photo-tag">${f.categoria}</span>
+      <button type="button" class="btn-remove-photo" title="Remover Foto" onclick="removerFotoVistoria('${f.id}')">&times;</button>
+    </div>
+  `;
+
+  // Preview Avarias
+  const boxAvarias = document.getElementById('previewAvariasFotos');
+  if (boxAvarias) {
+    boxAvarias.innerHTML = fotosAvarias.length
+      ? fotosAvarias.map(htmlItem).join('')
+      : '';
+  }
+
+  // Preview Pneus
+  const boxPneus = document.getElementById('previewPneusFotos');
+  if (boxPneus) {
+    boxPneus.innerHTML = fotosPneus.length
+      ? fotosPneus.map(htmlItem).join('')
+      : '';
+  }
+
+  // Preview Geral na Revisão
+  const boxRevisao = document.getElementById('previewRevisaoFotos');
+  if (boxRevisao) {
+    boxRevisao.innerHTML = fotosVistoria.length
+      ? fotosVistoria.map(htmlItem).join('')
+      : '<span style="font-size:12px;color:var(--mute);grid-column:1/-1">Nenhuma foto adicionada (as fotos são opcionais).</span>';
+  }
+}
+
+// ------------------------------------------------------------------------------
+// RESUMO DA REVISÃO (ETAPA 7)
+// ------------------------------------------------------------------------------
+
+function sigBadge(assinado, label, opcional = false) {
+  if (assinado) {
+    return '<span class="badge-sig ok"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> ' + label + ' Assinado</span>';
+  }
+  if (opcional) {
+    return '<span class="badge-sig optional"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg> ' + label + ' Opcional</span>';
+  }
+  return '<span class="badge-sig pending"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ' + label + ' Pendente</span>';
+}
+
+function renderizarResumoRevisao() {
+  const container = document.getElementById('reviewSummaryContent');
+  if (!container) return;
+
+  const d = coletarDadosFormulario();
+  const pendencias = [];
+  if (!d.veiculo) pendencias.push('Veículo não selecionado');
+  if (!d.placa) pendencias.push('Placa não informada');
+  if (!d.km) pendencias.push('Km atual não informado');
+  if (!d.motorista) pendencias.push('Motorista/Vendedor não informado');
+  if (!d.rota) pendencias.push('Rota não informada');
+  if (!d.tipo) pendencias.push('Tipo de vistoria não selecionado');
+  if (!d.comb) pendencias.push('Nível de combustível não informado');
+  if (!d.liberacao) pendencias.push('Liberação do veículo não definida');
+
+  let alertBoxHtml = '';
+  if (pendencias.length > 0) {
+    alertBoxHtml = `
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 12px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:6px;color:#dc2626;font-size:12.5px;font-weight:700">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span>Atenção: Campos obrigatórios incompletos (${pendencias.length})</span>
+        </div>
+        <ul style="margin:6px 0 8px 18px;font-size:12px;color:#b91c1c;padding:0">
+          ${pendencias.map(p => `<li>${p}</li>`).join('')}
+        </ul>
+        <button type="button" onclick="irParaEtapa(1, false)" style="background:#dc2626;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:11.5px;font-weight:700;cursor:pointer">Corrigir Dados Iniciais</button>
+      </div>
+    `;
+  }
+
+  const badgeLibColor = d.liberacao === 'Liberado' ? '#16a34a' : (d.liberacao === 'Liberado com Restrição' ? '#ca8a04' : (d.liberacao === 'Não Liberado' ? '#dc2626' : '#64748b'));
+
+  container.innerHTML = `
+    ${alertBoxHtml}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12.5px">
+      <div style="background:#f8fafc;padding:8px 10px;border-radius:8px;border:1px solid #e2e8f0">
+        <span style="color:#64748b;display:block;font-size:11px;font-weight:600">Veículo & Placa</span>
+        <b style="color:var(--brand-dark)">${d.veiculo || '—'}</b> <span style="font-weight:700;color:var(--brand)">${d.placa || '—'}</span>
+      </div>
+      <div style="background:#f8fafc;padding:8px 10px;border-radius:8px;border:1px solid #e2e8f0">
+        <span style="color:#64748b;display:block;font-size:11px;font-weight:600">Km & Combustível</span>
+        <b style="color:var(--brand-dark)">${d.km ? d.km + ' km' : '—'}</b> • <span>${d.comb || '—'}</span>
+      </div>
+      <div style="background:#f8fafc;padding:8px 10px;border-radius:8px;border:1px solid #e2e8f0">
+        <span style="color:#64748b;display:block;font-size:11px;font-weight:600">Motorista / Vendedor</span>
+        <b style="color:var(--brand-dark)">${d.motorista || '—'}</b>
+      </div>
+      <div style="background:#f8fafc;padding:8px 10px;border-radius:8px;border:1px solid #e2e8f0">
+        <span style="color:#64748b;display:block;font-size:11px;font-weight:600">Rota / Tipo</span>
+        <b style="color:var(--brand-dark)">${d.rota || '—'}</b> • <span>${d.tipo || '—'}</span>
+      </div>
+      <div style="background:#f8fafc;padding:8px 10px;border-radius:8px;border:1px solid #e2e8f0;grid-column:1/-1">
+        <span style="color:#64748b;display:block;font-size:11px;font-weight:600">Status de Liberação</span>
+        <span style="display:inline-block;padding:3px 8px;border-radius:5px;font-weight:800;font-size:12px;color:#fff;background:${badgeLibColor}">
+          ${d.liberacao || 'Pendente de Definição'}
+        </span>
+        <span style="margin-left:10px;color:#64748b;font-size:11.5px">Condição: <b>${d.condicao || 'Apto'}</b></span>
+      </div>
+      <div style="background:#f8fafc;padding:8px 10px;border-radius:8px;border:1px solid #e2e8f0">
+        <span style="color:#64748b;display:block;font-size:11px;font-weight:600">Avarias Registradas</span>
+        <b>${avarias.length} marcações</b>
+      </div>
+      <div style="background:#f8fafc;padding:8px 10px;border-radius:8px;border:1px solid #e2e8f0">
+        <span style="color:#64748b;display:block;font-size:11px;font-weight:600">Fotos Anexadas</span>
+        <b>${fotosVistoria.length} foto(s)</b>
+      </div>
+      <div style="background:#f8fafc;padding:8px 10px;border-radius:8px;border:1px solid #e2e8f0;grid-column:1/-1">
+        <span style="color:#64748b;display:block;font-size:11px;font-weight:600;margin-bottom:6px">Assinaturas Coletadas</span>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          ${sigBadge(assinaturas.ass_motorista, 'Motorista')}
+          ${sigBadge(assinaturas.ass_vistoriador, 'Vistoriador')}
+          ${sigBadge(assinaturas.ass_responsavel, 'Responsável', true)}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 // Armazenamento local de segurança (offline / fallback)
 const LOCAL_STORAGE_KEY = 'gomex_checklists_cache_v1';
 const DRAFT_KEY = 'gomex_checklist_rascunho_v1';
@@ -1641,7 +2744,7 @@ function clearActiveSig() {
 function saveActiveSig() {
   if (!activeSigKey) return;
   if (sigStrokeCount === 0) {
-    alert('Por favor, faça a assinatura antes de salvar.');
+    mostrarNotificacao('Por favor, faça a assinatura antes de salvar.', 'warning');
     return;
   }
   const dataUrl = sigCanvas.toDataURL('image/png');
@@ -2251,7 +3354,7 @@ function tentarAutoPreencherRota() {
   const rotaConhecida = (motKey && rotasPorMotorista.get(motKey)) || (plcKey && rotasPorPlaca.get(plcKey));
   if (rotaConhecida) {
     inpRota.value = rotaConhecida;
-    atualizarStatusRotaUI(`✓ Rota ${rotaConhecida} vinculada`, 'synced');
+    atualizarStatusRotaUI(`Rota ${rotaConhecida} vinculada`, 'synced');
     salvarRascunho();
   }
 }
@@ -2273,11 +3376,11 @@ async function sincronizarRotaNoPainel() {
   } catch (e) {}
 
   if (!rota || (!motorista && !placa)) {
-    atualizarStatusRotaUI('Sincroniza c/ o Painel', '');
+    atualizarStatusRotaUI('Rota do Vendedor', '');
     return;
   }
 
-  atualizarStatusRotaUI('⏳ Atualizando no painel...', 'syncing');
+  atualizarStatusRotaUI('<span class="spinner-sm"></span> Salvando rota...', 'syncing');
   try {
     const res = await fetch('/api/checklists', {
       method: 'PATCH',
@@ -2287,7 +3390,7 @@ async function sincronizarRotaNoPainel() {
     if (res.ok) {
       if (motorista) rotasPorMotorista.set(motorista.toLowerCase(), rota);
       if (placa) rotasPorPlaca.set(placa, rota);
-      atualizarStatusRotaUI(`✓ Rota ${rota} no Painel`, 'synced');
+      atualizarStatusRotaUI(`Rota ${rota} vinculada`, 'synced');
     } else {
       atualizarStatusRotaUI('Salva ao enviar vistoria', '');
     }
@@ -2302,7 +3405,7 @@ document.getElementById('rota')?.addEventListener('input', () => {
   clearTimeout(rotaSyncTimer);
   const val = document.getElementById('rota')?.value.trim();
   if (!val) {
-    atualizarStatusRotaUI('Sincroniza c/ o Painel', '');
+    atualizarStatusRotaUI('Rota do Vendedor', '');
     return;
   }
   atualizarStatusRotaUI('Digitando rota...', 'syncing');
@@ -2328,13 +3431,13 @@ document.getElementById('btnSalvar').addEventListener('click', async () => {
   if (!d.liberacao) pendencias.push('Defina a Liberação do Veículo');
 
   if (pendencias.length > 0) {
-    alert('Atenção! Preencha os campos obrigatórios:\n• ' + pendencias.join('\n• '));
+    mostrarNotificacao('Atenção! Preencha os campos obrigatórios:\n• ' + pendencias.join('\n• '), 'warning', 6000);
     return;
   }
 
   const btnSalvar = document.getElementById('btnSalvar');
   btnSalvar.disabled = true;
-  btnSalvar.innerHTML = '⏳ Gravando no Supabase...';
+  btnSalvar.innerHTML = '<span class="spinner-sm"></span> Gravando vistoria no banco...';
 
   const registro = {
     numero: 'AUTO',
@@ -2398,6 +3501,34 @@ document.getElementById('btnSalvar').addEventListener('click', async () => {
   // 2. Salva no cache local (garantia que nada se perde)
   salvarNoCacheLocal(registro);
 
+  // Sincroniza fotos anexadas com a Galeria de Veículos do Painel Executivo
+  if (fotosVistoria && fotosVistoria.length > 0) {
+    try {
+      btnSalvar.innerHTML = '<span class="spinner-sm"></span> Salvando fotos da vistoria...';
+      const resFotos = await fetch('/api/fotos-galeria', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          placa: registro.placa,
+          veiculo: registro.veiculo,
+          motorista: registro.motorista,
+          data: registro.data,
+          km: registro.km,
+          numero: numeroOficial,
+          fotos: fotosVistoria.map(f => ({
+            categoria: f.categoria,
+            dataUrl: f.dataUrl,
+            obs: 'Check-list Nº ' + numeroOficial + ' (' + f.categoria + ')'
+          }))
+        })
+      });
+      const dataFotos = await resFotos.json();
+      console.log('Fotos sincronizadas na galeria:', dataFotos);
+    } catch (fotoErr) {
+      console.warn('Aviso: Falha ao sincronizar fotos na galeria (offline):', fotoErr);
+    }
+  }
+
   // 3. Gera o PDF Oficial com o número REAL do Supabase
   try {
     const doc = await gerarPdfOficial(d, numeroOficial);
@@ -2436,7 +3567,7 @@ document.getElementById('btnBaixarPdfModal').addEventListener('click', () => {
   if (ultimoPdfGerado) {
     ultimoPdfGerado.doc.save(ultimoPdfGerado.nome);
   } else {
-    alert('O PDF não pôde ser gerado.');
+    mostrarNotificacao('O PDF não pôde ser gerado. Tente novamente.', 'error');
   }
 });
 
@@ -2464,8 +3595,26 @@ function limparFormulario() {
   });
   setarDataHoraAtual();
   setarDataHero();
+
+// Listeners para captura de fotos de pneus e avarias
+['inpFotoCamera', 'inpFotoGaleria'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) {
+    el.addEventListener('change', async function() {
+      if (this.files && this.files.length) {
+        await onFotosSelecionadas(this.files);
+        this.value = '';
+      }
+    });
+  }
+});
+
+irParaEtapa(1, false);
   refreshProgresso();
   try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+  fotosVistoria = [];
+  renderizarPreviewsFotos();
+  irParaEtapa(1, false);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -2532,7 +3681,7 @@ restaurarRascunho();
 carregarMapaRotasVendedores().then(() => {
   const rVal = document.getElementById('rota')?.value.trim();
   if (rVal) {
-    atualizarStatusRotaUI(`✓ Rota ${rVal}`, 'synced');
+    atualizarStatusRotaUI(`Rota ${rVal} vinculada`, 'synced');
   } else {
     tentarAutoPreencherRota();
   }
