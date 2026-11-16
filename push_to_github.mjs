@@ -91,7 +91,7 @@ async function pushFile(fileName) {
       } catch (e) {}
 
       const payload = {
-        message: `fix: camera integrada, upload galeria, sem erro armazenamento e rota /api/fotos-galeria (${fileName})`,
+        message: `feat(checklist): tornar fotos de carroceria e pneus obrigatorias (${fileName})`,
         content: base64Content,
         branch: 'main'
       };
