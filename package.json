@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node server.js",
     "build": "node generate_worker.js",
-    "deploy": "wrangler deploy"
+    "test": "node validate.mjs",
+    "deploy": "node validate.mjs && wrangler deploy",
+    "push": "node push_to_github.mjs"
   },
   "devDependencies": {
     "wrangler": "^3.107.0"
