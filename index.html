@@ -788,6 +788,10 @@
     border: 1.5px dashed #cbd5e1;
     border-radius: 12px;
   }
+  .photo-capture-box.has-photos {
+    border-color: #86efac;
+    background: #f0fdf4;
+  }
   .photo-capture-title {
     display: flex;
     align-items: center;
@@ -796,6 +800,24 @@
     font-weight: 700;
     color: var(--brand-dark);
     margin-bottom: 4px;
+  }
+  .photo-req-badge {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .photo-req-badge.pending {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+  }
+  .photo-req-badge.ok {
+    background: #ecfdf5;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
   }
   .photo-capture-sub {
     font-size: 12px;
@@ -1685,13 +1707,14 @@
         </label>
       </div>
 
-      <!-- Captura de Fotos de Avarias -->
-      <div class="photo-capture-box">
+      <!-- Captura de Fotos da Carroceria / Avarias (Obrigatória) -->
+      <div class="photo-capture-box" id="photoBoxAvarias">
         <div class="photo-capture-title">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          <b>Fotos das Avarias na Carroceria (Opcional)</b>
+          <b>Fotos do Veículo / Avarias *</b>
+          <span class="photo-req-badge pending" id="badgeReqFotoAvarias">Obrigatória</span>
         </div>
-        <p class="photo-capture-sub">Fotografe riscos, amassados ou avarias na lataria para comprovação no laudo da vistoria.</p>
+        <p class="photo-capture-sub">Obrigatória ao menos 1 foto da carroceria/veículo para comprovação no laudo (mesmo se marcar "Sem avarias novas").</p>
         <div class="photo-btn-row">
           <button type="button" class="btn-camera" onclick="acionarCapturaFoto('Avaria / Carroceria', true)">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
@@ -1787,13 +1810,14 @@
         </div>
       </div>
 
-      <!-- Captura de Fotos dos Pneus -->
-      <div class="photo-capture-box">
+      <!-- Captura de Fotos dos Pneus (Obrigatória) -->
+      <div class="photo-capture-box" id="photoBoxPneus">
         <div class="photo-capture-title">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          <b>Fotos dos Pneus e Rodas (Opcional)</b>
+          <b>Fotos dos Pneus e Rodas *</b>
+          <span class="photo-req-badge pending" id="badgeReqFotoPneus">Obrigatória</span>
         </div>
-        <p class="photo-capture-sub">Fotografe pneus desgastados, estepe, bolhas ou irregularidades para comprovação no laudo.</p>
+        <p class="photo-capture-sub">Obrigatória ao menos 1 foto dos pneus e rodas (estepe, desgaste ou calibragem) para comprovação no laudo.</p>
         <div class="photo-btn-row">
           <button type="button" class="btn-camera" onclick="acionarCapturaFoto('Pneus / Calibragem', true)">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
@@ -2074,12 +2098,12 @@
       <div class="photo-capture-box" style="margin-top:0">
         <div class="photo-capture-title">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          <b>Fotos Anexadas à Vistoria</b>
+          <b>Fotos Anexadas à Vistoria *</b>
+          <span class="photo-req-badge pending" id="badgeReqFotoRevisao">Obrigatória</span>
         </div>
-        <p class="photo-capture-sub">Registro fotográfico comprobatório anexado a esta vistoria.</p>
-        <div id="previewRevisaoFotos" class="photo-preview-grid">
-          <span style="font-size:12px;color:var(--mute);grid-column:1/-1">Nenhuma foto anexada (as fotos são opcionais).</span>
-        </div>
+        <p class="photo-capture-sub">Registro fotográfico obrigatório: ao menos 1 foto do veículo/carroceria (Etapa 2) e 1 dos pneus (Etapa 3).</p>
+        <div id="previewRevisaoFotos" class="photo-preview-grid"></div>
+        <div id="previewRevisaoFotosEmpty" style="font-size:12px;color:#b91c1c;font-weight:600;margin-top:8px">Nenhuma foto anexada ainda (obrigatório anexar carroceria e pneus).</div>
       </div>
     </section>
 
@@ -2345,76 +2369,97 @@ const ETAPAS_INFO = [
 let fotosVistoria = [];
 let categoriaFotoAtual = 'Avarias na Carroceria';
 
-function validarEtapa(etapa) {
+function ehFotoAvaria(f) {
+  const cat = (f && f.categoria) || '';
+  return cat.includes('Avaria') || cat.includes('Carroceria');
+}
+
+function ehFotoPneu(f) {
+  const cat = (f && f.categoria) || '';
+  return cat.includes('Pneu');
+}
+
+function obterStatusFotosVistoria() {
+  const avarias = fotosVistoria.filter(ehFotoAvaria);
+  const pneus = fotosVistoria.filter(ehFotoPneu);
+  return {
+    avarias,
+    pneus,
+    temAvaria: avarias.length > 0,
+    temPneu: pneus.length > 0,
+    total: fotosVistoria.length
+  };
+}
+
+function validarEtapa(etapa, silencioso = false) {
+  const falhar = (msg, alvo, foco = null) => {
+    if (!silencioso) {
+      mostrarNotificacao(msg, 'warning');
+      if (foco) foco.focus();
+      destacarCampoErro(alvo);
+    }
+    return false;
+  };
+
   if (etapa === 1) {
     const veicRadio = frm.querySelector('input[name="veiculo"]:checked');
     if (!veicRadio) {
-      mostrarNotificacao('Selecione o modelo do veículo antes de avançar.', 'warning');
-      destacarCampoErro(frm.querySelector('input[name="veiculo"]')?.closest('.fld'));
-      return false;
+      return falhar('Selecione o modelo do veículo antes de avançar.', frm.querySelector('input[name="veiculo"]')?.closest('.fld'));
     }
     if (veicRadio.value === 'Outro') {
-      const vOutro = (document.getElementById('veiculoOutro')?.value || '').trim();
-      if (!vOutro) {
-        mostrarNotificacao('Informe qual é o veículo no campo "Outro".', 'warning');
-        const inp = document.getElementById('veiculoOutro');
-        inp?.focus();
-        destacarCampoErro(inp);
-        return false;
+      const inpOutro = document.getElementById('veiculoOutro');
+      if (!(inpOutro?.value || '').trim()) {
+        return falhar('Informe qual é o veículo no campo "Outro".', inpOutro, inpOutro);
       }
     }
     const inpPlaca = frm.querySelector('input[name="placa"]');
-    const placa = (inpPlaca?.value || '').trim();
-    if (!placa) {
-      mostrarNotificacao('Informe a placa do veículo.', 'warning');
-      inpPlaca?.focus();
-      destacarCampoErro(inpPlaca);
-      return false;
+    if (!(inpPlaca?.value || '').trim()) {
+      return falhar('Informe a placa do veículo.', inpPlaca, inpPlaca);
     }
     const inpKm = frm.querySelector('input[name="km"]');
     const km = (inpKm?.value || '').trim();
     if (!km || Number(km) <= 0) {
-      mostrarNotificacao('Informe a quilometragem (Km) atual do veículo.', 'warning');
-      inpKm?.focus();
-      destacarCampoErro(inpKm);
-      return false;
+      return falhar('Informe a quilometragem (Km) atual do veículo.', inpKm, inpKm);
     }
     const inpMotorista = frm.querySelector('input[name="motorista"]');
-    const motorista = (inpMotorista?.value || '').trim();
-    if (!motorista) {
-      mostrarNotificacao('Informe o nome do vendedor / motorista.', 'warning');
-      inpMotorista?.focus();
-      destacarCampoErro(inpMotorista);
-      return false;
+    if (!(inpMotorista?.value || '').trim()) {
+      return falhar('Informe o nome do vendedor / motorista.', inpMotorista, inpMotorista);
     }
     const inpRota = frm.querySelector('input[name="rota"]');
-    const rota = (inpRota?.value || '').trim();
-    if (!rota) {
-      mostrarNotificacao('Informe ou selecione a rota do vendedor.', 'warning');
-      inpRota?.focus();
-      destacarCampoErro(inpRota);
-      return false;
+    if (!(inpRota?.value || '').trim()) {
+      return falhar('Informe ou selecione a rota do vendedor.', inpRota, inpRota);
     }
-    const tipoRadio = frm.querySelector('input[name="tipo"]:checked');
-    if (!tipoRadio) {
-      mostrarNotificacao('Selecione o tipo de vistoria (Saída, Retorno ou Periódica).', 'warning');
-      destacarCampoErro(frm.querySelector('input[name="tipo"]')?.closest('.fld'));
-      return false;
+    if (!frm.querySelector('input[name="tipo"]:checked')) {
+      return falhar('Selecione o tipo de vistoria (Saída, Retorno ou Periódica).', frm.querySelector('input[name="tipo"]')?.closest('.fld'));
     }
-    const combRadio = frm.querySelector('input[name="comb"]:checked');
-    if (!combRadio) {
-      mostrarNotificacao('Selecione o nível de combustível.', 'warning');
-      destacarCampoErro(frm.querySelector('input[name="comb"]')?.closest('.fld'));
-      return false;
+    if (!frm.querySelector('input[name="comb"]:checked')) {
+      return falhar('Selecione o nível de combustível.', frm.querySelector('input[name="comb"]')?.closest('.fld'));
+    }
+  }
+
+  if (etapa === 2) {
+    const { temAvaria } = obterStatusFotosVistoria();
+    if (!temAvaria) {
+      return falhar(
+        'Obrigatório anexar pelo menos 1 foto do veículo / carroceria antes de avançar.',
+        document.getElementById('photoBoxAvarias')
+      );
+    }
+  }
+
+  if (etapa === 3) {
+    const { temPneu } = obterStatusFotosVistoria();
+    if (!temPneu) {
+      return falhar(
+        'Obrigatório anexar pelo menos 1 foto dos pneus e rodas antes de avançar.',
+        document.getElementById('photoBoxPneus')
+      );
     }
   }
 
   if (etapa === 5) {
-    const libRadio = frm.querySelector('input[name="liberacao"]:checked');
-    if (!libRadio) {
-      mostrarNotificacao('Defina a condição de liberação do veículo (Liberado / Com Restrição / Não Liberado).', 'warning');
-      destacarCampoErro(frm.querySelector('input[name="liberacao"]')?.closest('.fld'));
-      return false;
+    if (!frm.querySelector('input[name="liberacao"]:checked')) {
+      return falhar('Defina a condição de liberação do veículo (Liberado / Com Restrição / Não Liberado).', frm.querySelector('input[name="liberacao"]')?.closest('.fld'));
     }
   }
 
@@ -2426,7 +2471,13 @@ function irParaEtapa(n, validar = true) {
   if (n > TOTAL_ETAPAS) n = TOTAL_ETAPAS;
 
   if (validar && n > etapaAtual) {
-    if (!validarEtapa(etapaAtual)) return;
+    for (let s = etapaAtual; s < n; s++) {
+      if (!validarEtapa(s, true)) {
+        if (s !== etapaAtual) irParaEtapa(s, false);
+        validarEtapa(s, false);
+        return;
+      }
+    }
   }
 
   etapaAtual = n;
@@ -2897,9 +2948,27 @@ function fecharZoomFoto() {
   if (modal) modal.classList.remove('open');
 }
 
+function atualizarBadgeFotoObrigatoria(badgeEl, boxEl, qtd, textoPendente = 'Obrigatória') {
+  if (badgeEl) {
+    if (qtd > 0) {
+      badgeEl.textContent = qtd + (qtd === 1 ? ' foto anexada' : ' fotos anexadas');
+      badgeEl.classList.remove('pending');
+      badgeEl.classList.add('ok');
+    } else {
+      badgeEl.textContent = textoPendente;
+      badgeEl.classList.remove('ok');
+      badgeEl.classList.add('pending');
+    }
+  }
+  if (boxEl) {
+    boxEl.classList.toggle('has-photos', qtd > 0);
+  }
+}
+
 function renderizarPreviewsFotos() {
-  const fotosAvarias = fotosVistoria.filter(f => (f.categoria || '').includes('Avaria'));
-  const fotosPneus = fotosVistoria.filter(f => (f.categoria || '').includes('Pneu'));
+  const statusFotos = obterStatusFotosVistoria();
+  const fotosAvarias = statusFotos.avarias;
+  const fotosPneus = statusFotos.pneus;
 
   const htmlItem = f => `
     <div class="photo-preview-item">
@@ -2909,13 +2978,18 @@ function renderizarPreviewsFotos() {
     </div>
   `;
 
-  // Preview Avarias
+  // Preview Avarias / Carroceria
   const boxAvarias = document.getElementById('previewAvariasFotos');
   if (boxAvarias) {
     boxAvarias.innerHTML = fotosAvarias.length
       ? fotosAvarias.map(htmlItem).join('')
       : '';
   }
+  atualizarBadgeFotoObrigatoria(
+    document.getElementById('badgeReqFotoAvarias'),
+    document.getElementById('photoBoxAvarias'),
+    fotosAvarias.length
+  );
 
   // Preview Pneus
   const boxPneus = document.getElementById('previewPneusFotos');
@@ -2924,13 +2998,36 @@ function renderizarPreviewsFotos() {
       ? fotosPneus.map(htmlItem).join('')
       : '';
   }
+  atualizarBadgeFotoObrigatoria(
+    document.getElementById('badgeReqFotoPneus'),
+    document.getElementById('photoBoxPneus'),
+    fotosPneus.length
+  );
 
   // Preview Geral na Revisão
   const boxRevisao = document.getElementById('previewRevisaoFotos');
   if (boxRevisao) {
     boxRevisao.innerHTML = fotosVistoria.length
       ? fotosVistoria.map(htmlItem).join('')
-      : '<span style="font-size:12px;color:var(--mute);grid-column:1/-1">Nenhuma foto adicionada (as fotos são opcionais).</span>';
+      : '';
+  }
+  const emptyRevisao = document.getElementById('previewRevisaoFotosEmpty');
+  if (emptyRevisao) {
+    emptyRevisao.style.display = fotosVistoria.length ? 'none' : 'block';
+  }
+  const badgeRev = document.getElementById('badgeReqFotoRevisao');
+  if (badgeRev) {
+    if (statusFotos.temAvaria && statusFotos.temPneu) {
+      badgeRev.textContent = statusFotos.total + (statusFotos.total === 1 ? ' foto anexada' : ' fotos anexadas');
+      badgeRev.classList.remove('pending');
+      badgeRev.classList.add('ok');
+    } else {
+      badgeRev.textContent = !statusFotos.temAvaria && !statusFotos.temPneu
+        ? 'Falta carroceria e pneus'
+        : (!statusFotos.temAvaria ? 'Falta carroceria (Etapa 2)' : 'Falta pneus (Etapa 3)');
+      badgeRev.classList.remove('ok');
+      badgeRev.classList.add('pending');
+    }
   }
 }
 
@@ -2953,15 +3050,21 @@ function renderizarResumoRevisao() {
   if (!container) return;
 
   const d = coletarDadosFormulario();
+  const statusFotos = obterStatusFotosVistoria();
   const pendencias = [];
-  if (!d.veiculo) pendencias.push('Veículo não selecionado');
-  if (!d.placa) pendencias.push('Placa não informada');
-  if (!d.km) pendencias.push('Km atual não informado');
-  if (!d.motorista) pendencias.push('Motorista/Vendedor não informado');
-  if (!d.rota) pendencias.push('Rota não informada');
-  if (!d.tipo) pendencias.push('Tipo de vistoria não selecionado');
-  if (!d.comb) pendencias.push('Nível de combustível não informado');
-  if (!d.liberacao) pendencias.push('Liberação do veículo não definida');
+  const pushPend = (msg, etapa) => pendencias.push({ msg, etapa });
+  if (!d.veiculo) pushPend('Veículo não selecionado', 1);
+  if (!d.placa) pushPend('Placa não informada', 1);
+  if (!d.km) pushPend('Km atual não informado', 1);
+  if (!d.motorista) pushPend('Motorista/Vendedor não informado', 1);
+  if (!d.rota) pushPend('Rota não informada', 1);
+  if (!d.tipo) pushPend('Tipo de vistoria não selecionado', 1);
+  if (!d.comb) pushPend('Nível de combustível não informado', 1);
+  if (!statusFotos.temAvaria) pushPend('Foto do veículo / carroceria obrigatória (Etapa 2)', 2);
+  if (!statusFotos.temPneu) pushPend('Foto dos pneus e rodas obrigatória (Etapa 3)', 3);
+  if (!d.liberacao) pushPend('Liberação do veículo não definida', 5);
+
+  const etapaCorrigir = pendencias.length ? pendencias[0].etapa : 1;
 
   let alertBoxHtml = '';
   if (pendencias.length > 0) {
@@ -2969,12 +3072,12 @@ function renderizarResumoRevisao() {
       <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 12px;margin-bottom:12px">
         <div style="display:flex;align-items:center;gap:6px;color:#dc2626;font-size:12.5px;font-weight:700">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <span>Atenção: Campos obrigatórios incompletos (${pendencias.length})</span>
+          <span>Atenção: Itens obrigatórios pendentes (${pendencias.length})</span>
         </div>
         <ul style="margin:6px 0 8px 18px;font-size:12px;color:#b91c1c;padding:0">
-          ${pendencias.map(p => `<li>${p}</li>`).join('')}
+          ${pendencias.map(p => `<li>${p.msg}</li>`).join('')}
         </ul>
-        <button type="button" onclick="irParaEtapa(1, false)" style="background:#dc2626;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:11.5px;font-weight:700;cursor:pointer">Corrigir Dados Iniciais</button>
+        <button type="button" onclick="irParaEtapa(${etapaCorrigir}, false)" style="background:#dc2626;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:11.5px;font-weight:700;cursor:pointer">Corrigir Etapa ${etapaCorrigir}</button>
       </div>
     `;
   }
@@ -3012,8 +3115,11 @@ function renderizarResumoRevisao() {
         <b>${avarias.length} marcações</b>
       </div>
       <div style="background:#f8fafc;padding:8px 10px;border-radius:8px;border:1px solid #e2e8f0">
-        <span style="color:#64748b;display:block;font-size:11px;font-weight:600">Fotos Anexadas</span>
-        <b>${fotosVistoria.length} foto(s)</b>
+        <span style="color:#64748b;display:block;font-size:11px;font-weight:600">Fotos Obrigatórias</span>
+        <b>${statusFotos.total} foto(s)</b>
+        <span style="display:block;font-size:11px;color:${(statusFotos.temAvaria && statusFotos.temPneu) ? '#15803d' : '#dc2626'};margin-top:2px;font-weight:600">
+          Carroceria: ${statusFotos.avarias.length} • Pneus: ${statusFotos.pneus.length}
+        </span>
       </div>
       <div style="background:#f8fafc;padding:8px 10px;border-radius:8px;border:1px solid #e2e8f0;grid-column:1/-1">
         <span style="color:#64748b;display:block;font-size:11px;font-weight:600;margin-bottom:6px">Assinaturas Coletadas</span>
@@ -4020,19 +4126,33 @@ document.getElementById('rota')?.addEventListener('change', () => {
 // Envio Seguro de Dados (Via Backend Server com Fallback Local)
 document.getElementById('btnSalvar').addEventListener('click', async () => {
   const d = coletarDadosFormulario();
+  const statusFotos = obterStatusFotosVistoria();
 
   const pendencias = [];
-  if (!d.veiculo) pendencias.push('Selecione o Veículo');
-  if (!d.placa) pendencias.push('Informe a Placa');
-  if (!d.km) pendencias.push('Informe o Km Atual');
-  if (!d.motorista) pendencias.push('Informe o Motorista / Vendedor');
-  if (!d.rota || !String(d.rota).trim()) pendencias.push('Informe a Rota do Vendedor');
-  if (!d.tipo) pendencias.push('Informe o Tipo de Vistoria');
-  if (!d.comb) pendencias.push('Informe o Nível de Combustível');
-  if (!d.liberacao) pendencias.push('Defina a Liberação do Veículo');
+  let primeiraEtapaErro = null;
+  const addPendencia = (msg, etapa) => {
+    pendencias.push(msg);
+    if (primeiraEtapaErro === null) primeiraEtapaErro = etapa;
+  };
+
+  if (!d.veiculo) addPendencia('Selecione o Veículo', 1);
+  if (!d.placa) addPendencia('Informe a Placa', 1);
+  if (!d.km) addPendencia('Informe o Km Atual', 1);
+  if (!d.motorista) addPendencia('Informe o Motorista / Vendedor', 1);
+  if (!d.rota || !String(d.rota).trim()) addPendencia('Informe a Rota do Vendedor', 1);
+  if (!d.tipo) addPendencia('Informe o Tipo de Vistoria', 1);
+  if (!d.comb) addPendencia('Informe o Nível de Combustível', 1);
+  if (!statusFotos.temAvaria) addPendencia('Adicione pelo menos 1 foto do Veículo / Carroceria (Etapa 2)', 2);
+  if (!statusFotos.temPneu) addPendencia('Adicione pelo menos 1 foto dos Pneus e Rodas (Etapa 3)', 3);
+  if (!d.liberacao) addPendencia('Defina a Liberação do Veículo', 5);
 
   if (pendencias.length > 0) {
-    mostrarNotificacao('Atenção! Preencha os campos obrigatórios:\n• ' + pendencias.join('\n• '), 'warning', 6000);
+    mostrarNotificacao('Atenção! Itens obrigatórios pendentes:\n• ' + pendencias.join('\n• '), 'warning', 6000);
+    if (primeiraEtapaErro !== null && primeiraEtapaErro !== etapaAtual) {
+      irParaEtapa(primeiraEtapaErro, false);
+    }
+    if (primeiraEtapaErro === 2) destacarCampoErro(document.getElementById('photoBoxAvarias'));
+    else if (primeiraEtapaErro === 3) destacarCampoErro(document.getElementById('photoBoxPneus'));
     return;
   }
 
@@ -4315,6 +4435,7 @@ function inicializarCapturasFoto() {
   });
 }
 inicializarCapturasFoto();
+renderizarPreviewsFotos();
 
 window.addEventListener('pagehide', pararStreamCamera);
 window.addEventListener('online', () => { reenviarFotosPendentes(false); });
