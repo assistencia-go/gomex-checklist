@@ -1,7 +1,9 @@
 # Variáveis de ambiente com chaves de banco de dados (NUNCA SUBIR)
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+*.pem
+*.key
 
 # Dependências
 node_modules/
