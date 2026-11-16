@@ -835,60 +835,238 @@
   }
   .btn-gallery:hover { background: #f0f4ff; }
 
+  /* Input de arquivo acessível para Android WebView / iOS Safari (evita falha do display:none) */
+  .sr-file-input {
+    position: fixed;
+    left: -9999px;
+    top: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0.01;
+    pointer-events: none;
+  }
+
   /* Grid de Miniaturas de Fotos */
   .photo-preview-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
     gap: 8px;
     margin-top: 12px;
   }
-  .photo-thumb-item {
+  .photo-thumb-item,
+  .photo-preview-item {
     position: relative;
     border-radius: 8px;
     overflow: hidden;
     aspect-ratio: 1;
-    background: #000;
-    border: 1px solid #e2e8f0;
+    background: #0f172a;
+    border: 1px solid #cbd5e1;
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   }
-  .photo-thumb-item img {
+  .photo-thumb-item img,
+  .photo-preview-item img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
+    cursor: pointer;
   }
-  .photo-thumb-del {
+  .photo-thumb-del,
+  .btn-remove-photo {
     position: absolute;
     top: 4px;
     right: 4px;
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
-    background: rgba(220, 38, 38, 0.9);
+    background: rgba(220, 38, 38, 0.94);
     color: #fff;
-    border: none;
-    font-size: 14px;
+    border: 1.5px solid #fff;
+    font-size: 15px;
     font-weight: bold;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     line-height: 1;
+    padding: 0;
+    z-index: 2;
   }
-  .photo-thumb-tag {
+  .photo-thumb-tag,
+  .photo-tag {
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
-    background: rgba(0,0,0,0.7);
+    background: rgba(15, 23, 42, 0.84);
     color: #fff;
     font-size: 9.5px;
     font-weight: 700;
-    padding: 2px 4px;
+    padding: 3px 4px;
     text-align: center;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  /* Banner de fila offline de fotos */
+  .offline-photos-banner {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: #fffbeb;
+    border: 1.5px solid #f59e0b;
+    color: #92400e;
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+  .offline-photos-banner.show { display: flex; }
+  .offline-photos-banner button {
+    background: #d97706;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: inherit;
+  }
+
+  /* Modal da Câmera Integrada no App (evita crash de RAM / encerramento no Android) */
+  #cameraModal {
+    position: fixed;
+    inset: 0;
+    z-index: 120;
+    background: #020617;
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  #cameraModal.open { display: flex; }
+  .cam-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 12px 14px;
+    background: rgba(15, 23, 42, 0.95);
+    color: #fff;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .cam-head-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .cam-body {
+    flex: 1;
+    position: relative;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  #camVideo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .cam-status-pill {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 23, 42, 0.8);
+    color: #fff;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 11.5px;
+    font-weight: 700;
+    border: 1px solid rgba(255,255,255,0.2);
+    white-space: nowrap;
+  }
+  .cam-foot {
+    background: rgba(15, 23, 42, 0.96);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+  .cam-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .cam-btn-sec {
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .cam-btn-shutter {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: #fff;
+    border: 4px solid #38bdf8;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 16px rgba(56,189,248,0.4);
+  }
+  .cam-btn-shutter::after {
+    content: '';
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #1e2a78;
+  }
+  .cam-btn-done {
+    background: #10b981;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 12.5px;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .cam-native-link {
+    background: transparent;
+    border: none;
+    color: #93c5fd;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+    align-self: center;
+    padding: 2px 6px;
+    font-family: inherit;
   }
 
   /* Etapa 7: Resumo de Revisão */
@@ -1309,9 +1487,15 @@
 <!-- ============================================================================== -->
 <div id="viewForm" class="main-wrap">
 
-  <!-- Inputs Ocultos para Câmera e Galeria de Fotos da Frota -->
-  <input type="file" id="inpFotoCamera" accept="image/*" capture="environment" style="display:none">
-  <input type="file" id="inpFotoGaleria" accept="image/*" multiple style="display:none">
+  <!-- Banner de Fotos Pendentes de Reenvio (Offline) -->
+  <div id="offlinePhotosBanner" class="offline-photos-banner" role="status">
+    <span id="offlinePhotosTxt">Há fotos aguardando sincronização com o painel.</span>
+    <button type="button" onclick="reenviarFotosPendentes(true)">Reenviar agora</button>
+  </div>
+
+  <!-- Inputs Acessíveis para Câmera Nativa e Galeria de Fotos da Frota -->
+  <input type="file" id="inpFotoCamera" accept="image/*" capture="environment" class="sr-file-input">
+  <input type="file" id="inpFotoGaleria" accept="image/*" multiple class="sr-file-input">
 
   <form id="frm" autocomplete="off" onsubmit="return false">
 
@@ -1509,11 +1693,11 @@
         </div>
         <p class="photo-capture-sub">Fotografe riscos, amassados ou avarias na lataria para comprovação no laudo da vistoria.</p>
         <div class="photo-btn-row">
-          <button type="button" class="btn-camera" onclick="acionarCapturaFoto('Avarias na Carroceria', true)">
+          <button type="button" class="btn-camera" onclick="acionarCapturaFoto('Avaria / Carroceria', true)">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
             <span>Tirar Foto (Câmera)</span>
           </button>
-          <button type="button" class="btn-gallery" onclick="acionarCapturaFoto('Avarias na Carroceria', false)">
+          <button type="button" class="btn-gallery" onclick="acionarCapturaFoto('Avaria / Carroceria', false)">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             <span>Anexar da Galeria</span>
           </button>
@@ -1611,11 +1795,11 @@
         </div>
         <p class="photo-capture-sub">Fotografe pneus desgastados, estepe, bolhas ou irregularidades para comprovação no laudo.</p>
         <div class="photo-btn-row">
-          <button type="button" class="btn-camera" onclick="acionarCapturaFoto('Pneus e Rodas', true)">
+          <button type="button" class="btn-camera" onclick="acionarCapturaFoto('Pneus / Calibragem', true)">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
             <span>Tirar Foto (Câmera)</span>
           </button>
-          <button type="button" class="btn-gallery" onclick="acionarCapturaFoto('Pneus e Rodas', false)">
+          <button type="button" class="btn-gallery" onclick="acionarCapturaFoto('Pneus / Calibragem', false)">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             <span>Anexar da Galeria</span>
           </button>
@@ -2027,6 +2211,44 @@
 </div>
 
 <!-- ============================================================================== -->
+<!-- MODAL: CÂMERA INTEGRADA DO APLICATIVO -->
+<!-- ============================================================================== -->
+<div id="cameraModal" role="dialog" aria-modal="true" aria-label="Câmera da Vistoria">
+  <div class="cam-head">
+    <div class="cam-head-title" id="camModalTitle">Câmera · Fotos da Vistoria</div>
+    <button type="button" class="cam-btn-sec" onclick="fecharCameraIntegrada()">Fechar</button>
+  </div>
+  <div class="cam-body">
+    <video id="camVideo" autoplay playsinline muted></video>
+    <div class="cam-status-pill" id="camCountPill">0 foto(s) na vistoria</div>
+  </div>
+  <div class="cam-foot">
+    <div class="cam-controls">
+      <button type="button" class="cam-btn-sec" onclick="alternarCameraIntegrada()" title="Alternar câmera frontal/traseira">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+        <span>Virar</span>
+      </button>
+      <button type="button" class="cam-btn-shutter" id="btnCamCapturar" onclick="capturarFotoCameraIntegrada()" aria-label="Tirar Foto"></button>
+      <button type="button" class="cam-btn-done" onclick="fecharCameraIntegrada()">Concluir</button>
+    </div>
+    <button type="button" class="cam-native-link" onclick="usarCameraNativaFallback()">Abrir câmera padrão do aparelho</button>
+  </div>
+</div>
+
+<!-- ============================================================================== -->
+<!-- MODAL: AMPLIAR FOTO ANEXADA -->
+<!-- ============================================================================== -->
+<div class="modal-overlay" id="photoPreviewModal" onclick="if(event.target===this) fecharZoomFoto()">
+  <div class="modal-box" style="max-width:600px;padding:14px;text-align:center">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <strong id="photoZoomTitle" style="font-size:14px;color:var(--brand-dark)">Foto Anexada</strong>
+      <button type="button" class="btn-modal btn-modal-clear" style="padding:5px 12px;font-size:12px" onclick="fecharZoomFoto()">Fechar</button>
+    </div>
+    <img id="photoZoomImg" src="" alt="Preview" style="width:100%;max-height:68vh;object-fit:contain;border-radius:10px;background:#0f172a">
+  </div>
+</div>
+
+<!-- ============================================================================== -->
 <!-- JAVASCRIPT: LÓGICA DO CLIENTE (SEM CREDENCIAIS OU SQL EXPOSTOS) -->
 <!-- ============================================================================== -->
 <script>
@@ -2280,87 +2502,410 @@ function voltarEtapa() {
 }
 
 // ------------------------------------------------------------------------------
-// FOTOS: CAPTURA, COMPRESSÃO EM CANVAS & PREVIEWS
+// FOTOS: CAPTURA (CÂMERA INTEGRADA + FALLBACK NATIVO), COMPRESSÃO & PREVIEWS
 // ------------------------------------------------------------------------------
-function comprimirFoto(file, maxDim = 1100, quality = 0.78) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = reject;
-    reader.onload = e => {
-      const img = new Image();
-      img.onerror = reject;
-      img.onload = () => {
-        let w = img.width;
-        let h = img.height;
-        if (w > maxDim || h > maxDim) {
-          if (w > h) {
-            h = Math.round((h * maxDim) / w);
-            w = maxDim;
-          } else {
-            w = Math.round((w * maxDim) / h);
-            h = maxDim;
-          }
+const MAX_FOTOS_VISTORIA = 12;
+const PROD_API_ORIGIN = 'https://gomex-checklist.gomexassistencia2026.workers.dev';
+
+function apiUrl(path) {
+  const isNativeApk = Boolean(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform()) ||
+    location.protocol === 'capacitor:' ||
+    location.protocol === 'file:' ||
+    (location.hostname === 'localhost' && !location.port);
+  return isNativeApk ? PROD_API_ORIGIN + path : path;
+}
+
+// Banco IndexedDB para armazenar fotos e fila offline sem estourar a cota de 5MB do localStorage
+const gomexIDB = (() => {
+  let dbPromise = null;
+  function openDB() {
+    if (typeof indexedDB === 'undefined') return Promise.resolve(null);
+    if (dbPromise) return dbPromise;
+    dbPromise = new Promise(resolve => {
+      try {
+        const req = indexedDB.open('gomex_checklist_db', 1);
+        req.onupgradeneeded = e => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains('rascunho')) db.createObjectStore('rascunho');
+          if (!db.objectStoreNames.contains('fila_fotos')) db.createObjectStore('fila_fotos', { keyPath: 'id' });
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => resolve(null);
+      } catch (e) { resolve(null); }
+    });
+    return dbPromise;
+  }
+  async function op(storeName, mode, fn) {
+    const db = await openDB();
+    if (!db) return null;
+    return new Promise(resolve => {
+      try {
+        const tx = db.transaction(storeName, mode);
+        const store = tx.objectStore(storeName);
+        const req = fn(store);
+        if (!req) {
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = () => resolve(null);
+          return;
         }
-        const canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, w, h);
-        const dataUrl = canvas.toDataURL('image/jpeg', quality);
-        resolve(dataUrl);
-      };
-      img.src = e.target.result;
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => resolve(null);
+      } catch (e) { resolve(null); }
+    });
+  }
+  return {
+    getRascunho: () => op('rascunho', 'readonly', s => s.get('atual')),
+    putRascunho: (val) => op('rascunho', 'readwrite', s => s.put(val, 'atual')),
+    clearRascunho: () => op('rascunho', 'readwrite', s => s.delete('atual')),
+    getAllFila: async () => (await op('fila_fotos', 'readonly', s => s.getAll())) || [],
+    putFila: (item) => op('fila_fotos', 'readwrite', s => s.put(item)),
+    delFila: (id) => op('fila_fotos', 'readwrite', s => s.delete(id))
+  };
+})();
+
+function exportarCanvasJpegLimitado(canvas, qualityInicial = 0.74) {
+  let dataUrl = canvas.toDataURL('image/jpeg', qualityInicial);
+  if (dataUrl.length > 210000) {
+    dataUrl = canvas.toDataURL('image/jpeg', 0.58);
+  }
+  if (dataUrl.length > 240000) {
+    // Reduz um pouco mais a resolução se a imagem tiver muitos detalhes
+    const cv2 = document.createElement('canvas');
+    const scale = 0.8;
+    cv2.width = Math.max(1, Math.round(canvas.width * scale));
+    cv2.height = Math.max(1, Math.round(canvas.height * scale));
+    const ctx2 = cv2.getContext('2d');
+    if (ctx2) {
+      ctx2.fillStyle = '#ffffff';
+      ctx2.fillRect(0, 0, cv2.width, cv2.height);
+      ctx2.drawImage(canvas, 0, 0, cv2.width, cv2.height);
+      dataUrl = cv2.toDataURL('image/jpeg', 0.52);
+    }
+    cv2.width = 0;
+    cv2.height = 0;
+  }
+  return dataUrl;
+}
+
+function ehArquivoImagemValido(file) {
+  if (!file) return false;
+  if (file.type && file.type.startsWith('image/')) return true;
+  return /\.(jpe?g|png|webp|gif|bmp|heic|heif)$/i.test(file.name || '');
+}
+
+async function decodificarImagemBaixaMemoria(file) {
+  if (typeof createImageBitmap === 'function') {
+    try {
+      const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
+      return { source: bmp, width: bmp.width, height: bmp.height, cleanup: () => { try { bmp.close(); } catch (e) {} } };
+    } catch (e1) {
+      try {
+        const bmp = await createImageBitmap(file);
+        return { source: bmp, width: bmp.width, height: bmp.height, cleanup: () => { try { bmp.close(); } catch (e) {} } };
+      } catch (e2) {}
+    }
+  }
+  const objUrl = URL.createObjectURL(file);
+  return await new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve({
+      source: img,
+      width: img.naturalWidth || img.width,
+      height: img.naturalHeight || img.height,
+      cleanup: () => { try { URL.revokeObjectURL(objUrl); } catch (e) {} }
+    });
+    img.onerror = err => {
+      try { URL.revokeObjectURL(objUrl); } catch (e) {}
+      reject(err || new Error('Falha ao decodificar imagem'));
     };
-    reader.readAsDataURL(file);
+    img.src = objUrl;
   });
 }
 
-function acionarCapturaFoto(categoria, isCamera = false) {
-  categoriaFotoAtual = categoria;
-  const input = isCamera ? document.getElementById('inpFotoCamera') : document.getElementById('inpFotoGaleria');
-  if (input) {
-    input.value = '';
-    input.click();
+async function comprimirFoto(file, maxDim = 1024, quality = 0.74) {
+  if (!ehArquivoImagemValido(file)) {
+    throw new Error('Formato de arquivo inválido. Selecione uma imagem (JPG, PNG, WEBP).');
   }
+  if (file.size && file.size > 40 * 1024 * 1024) {
+    throw new Error('Imagem muito grande (> 40 MB). Reduza ou tire outra foto.');
+  }
+
+  const decoded = await decodificarImagemBaixaMemoria(file);
+  const canvas = document.createElement('canvas');
+  try {
+    let w = decoded.width;
+    let h = decoded.height;
+    if (!w || !h) throw new Error('Dimensões inválidas da imagem');
+    if (w > maxDim || h > maxDim) {
+      if (w > h) {
+        h = Math.max(1, Math.round((h * maxDim) / w));
+        w = maxDim;
+      } else {
+        w = Math.max(1, Math.round((w * maxDim) / h));
+        h = maxDim;
+      }
+    }
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d', { alpha: false });
+    if (!ctx) throw new Error('Memória insuficiente para processar a imagem.');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(decoded.source, 0, 0, w, h);
+    return exportarCanvasJpegLimitado(canvas, quality);
+  } finally {
+    decoded.cleanup();
+    canvas.width = 0;
+    canvas.height = 0;
+  }
+}
+
+let camStream = null;
+let camFacingMode = 'environment';
+let processandoFotos = false;
+
+function atualizarPillCamera() {
+  const pill = document.getElementById('camCountPill');
+  if (pill) {
+    pill.textContent = fotosVistoria.length + (fotosVistoria.length === 1 ? ' foto na vistoria' : ' fotos na vistoria');
+  }
+}
+
+function pararStreamCamera() {
+  if (camStream) {
+    try { camStream.getTracks().forEach(t => t.stop()); } catch (e) {}
+    camStream = null;
+  }
+  const video = document.getElementById('camVideo');
+  if (video) video.srcObject = null;
+}
+
+function fecharCameraIntegrada() {
+  pararStreamCamera();
+  const modal = document.getElementById('cameraModal');
+  if (modal) modal.classList.remove('open');
+  document.body.classList.remove('modal-open');
+}
+
+async function abrirCameraIntegrada() {
+  if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
+    return false;
+  }
+  pararStreamCamera();
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: camFacingMode }, width: { ideal: 1280 }, height: { ideal: 960 } },
+      audio: false
+    });
+    const modal = document.getElementById('cameraModal');
+    const video = document.getElementById('camVideo');
+    const title = document.getElementById('camModalTitle');
+    if (!modal || !video) {
+      pararStreamCamera();
+      return false;
+    }
+    if (title) title.textContent = 'Câmera · ' + categoriaFotoAtual;
+    atualizarPillCamera();
+    video.srcObject = camStream;
+    await video.play().catch(() => {});
+    document.body.classList.add('modal-open');
+    modal.classList.add('open');
+    return true;
+  } catch (err) {
+    pararStreamCamera();
+    return false;
+  }
+}
+
+async function alternarCameraIntegrada() {
+  camFacingMode = camFacingMode === 'environment' ? 'user' : 'environment';
+  const ok = await abrirCameraIntegrada();
+  if (!ok) {
+    camFacingMode = 'environment';
+    mostrarNotificacao('Não foi possível alternar a câmera neste aparelho.', 'warning');
+  }
+}
+
+async function capturarFotoCameraIntegrada() {
+  if (fotosVistoria.length >= MAX_FOTOS_VISTORIA) {
+    mostrarNotificacao(`Limite de ${MAX_FOTOS_VISTORIA} fotos por vistoria atingido.`, 'warning');
+    return;
+  }
+  const video = document.getElementById('camVideo');
+  if (!video || !video.videoWidth || !video.videoHeight) {
+    mostrarNotificacao('A câmera ainda está carregando, aguarde um instante.', 'info');
+    return;
+  }
+  const btn = document.getElementById('btnCamCapturar');
+  if (btn) btn.disabled = true;
+  const canvas = document.createElement('canvas');
+  try {
+    let w = video.videoWidth;
+    let h = video.videoHeight;
+    const maxDim = 1024;
+    if (w > maxDim || h > maxDim) {
+      if (w > h) {
+        h = Math.max(1, Math.round((h * maxDim) / w));
+        w = maxDim;
+      } else {
+        w = Math.max(1, Math.round((w * maxDim) / h));
+        h = maxDim;
+      }
+    }
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d', { alpha: false });
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(video, 0, 0, w, h);
+    const dataUrl = exportarCanvasJpegLimitado(canvas, 0.76);
+    const id = 'foto_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    fotosVistoria.push({
+      id,
+      categoria: categoriaFotoAtual,
+      dataUrl,
+      nome: 'camera_' + Date.now() + '.jpg',
+      ts: Date.now()
+    });
+    renderizarPreviewsFotos();
+    atualizarPillCamera();
+    await salvarRascunho();
+    mostrarNotificacao('Foto capturada com sucesso (' + fotosVistoria.length + '/' + MAX_FOTOS_VISTORIA + ').', 'success', 2000);
+  } catch (err) {
+    mostrarNotificacao('Erro ao capturar foto: ' + (err.message || 'tente novamente.'), 'error');
+  } finally {
+    canvas.width = 0;
+    canvas.height = 0;
+    if (btn) btn.disabled = false;
+  }
+}
+
+function acionarInputArquivo(inputId) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  try { input.value = ''; } catch (e) {}
+  input.click();
+}
+
+function usarCameraNativaFallback() {
+  fecharCameraIntegrada();
+  acionarInputArquivo('inpFotoCamera');
+}
+
+async function acionarCapturaFoto(categoria, isCamera = false) {
+  if (processandoFotos) {
+    mostrarNotificacao('Aguarde o processamento da foto atual.', 'info');
+    return;
+  }
+  if (fotosVistoria.length >= MAX_FOTOS_VISTORIA) {
+    mostrarNotificacao(`Limite de ${MAX_FOTOS_VISTORIA} fotos por vistoria atingido.`, 'warning');
+    return;
+  }
+  categoriaFotoAtual = categoria;
+  // Salva rascunho completo antes de abrir câmera/galeria (garante zero perda se o SO recarregar a aba)
+  await salvarRascunho();
+
+  if (isCamera) {
+    const abriuIntegrada = await abrirCameraIntegrada();
+    if (!abriuIntegrada) {
+      acionarInputArquivo('inpFotoCamera');
+    }
+    return;
+  }
+  acionarInputArquivo('inpFotoGaleria');
 }
 
 async function onFotosSelecionadas(fileList) {
   if (!fileList || !fileList.length) return;
-  for (let i = 0; i < fileList.length; i++) {
-    const file = fileList[i];
+  processandoFotos = true;
+  const files = Array.from(fileList);
+  const vagas = Math.max(0, MAX_FOTOS_VISTORIA - fotosVistoria.length);
+  if (vagas === 0) {
+    processandoFotos = false;
+    mostrarNotificacao(`Limite de ${MAX_FOTOS_VISTORIA} fotos por vistoria atingido.`, 'warning');
+    return;
+  }
+  const lote = files.slice(0, vagas);
+  if (files.length > vagas) {
+    mostrarNotificacao(`Apenas ${vagas} foto(s) puderam ser adicionadas (limite de ${MAX_FOTOS_VISTORIA}).`, 'warning');
+  }
+
+  let adicionadas = 0;
+  let falhas = 0;
+  let ultimoErro = '';
+
+  for (let i = 0; i < lote.length; i++) {
+    const file = lote[i];
+    if (lote.length > 1) {
+      mostrarNotificacao(`Processando imagem ${i + 1} de ${lote.length}...`, 'info', 2500);
+    }
     try {
       const dataUrl = await comprimirFoto(file);
-      const id = 'foto_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+      const id = 'foto_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
       fotosVistoria.push({
         id,
         categoria: categoriaFotoAtual,
         dataUrl,
-        nome: file.name,
+        nome: file.name || ('foto_' + (i + 1) + '.jpg'),
         ts: Date.now()
       });
+      adicionadas++;
+      renderizarPreviewsFotos();
     } catch (err) {
+      falhas++;
+      ultimoErro = err?.message || 'Erro ao processar arquivo.';
       console.error('Erro comprimindo foto:', err);
     }
   }
-  renderizarPreviewsFotos();
-  salvarRascunho();
+
+  await salvarRascunho();
+  processandoFotos = false;
+
+  if (adicionadas > 0 && falhas === 0) {
+    mostrarNotificacao(adicionadas === 1 ? 'Foto anexada à vistoria.' : `${adicionadas} fotos anexadas à vistoria.`, 'success', 2800);
+  } else if (falhas > 0) {
+    mostrarNotificacao(
+      adicionadas > 0
+        ? `${adicionadas} foto(s) anexada(s), mas ${falhas} falharam (${ultimoErro}).`
+        : `Não foi possível abrir a imagem selecionada: ${ultimoErro}`,
+      'error',
+      5500
+    );
+  }
 }
 
 function removerFotoVistoria(id) {
   fotosVistoria = fotosVistoria.filter(f => f.id !== id);
   renderizarPreviewsFotos();
+  atualizarPillCamera();
   salvarRascunho();
 }
 
+function abrirZoomFoto(id) {
+  const f = fotosVistoria.find(x => x.id === id);
+  if (!f) return;
+  const img = document.getElementById('photoZoomImg');
+  const title = document.getElementById('photoZoomTitle');
+  const modal = document.getElementById('photoPreviewModal');
+  if (img) img.src = f.dataUrl;
+  if (title) title.textContent = f.categoria;
+  if (modal) modal.classList.add('open');
+}
+
+function fecharZoomFoto() {
+  const modal = document.getElementById('photoPreviewModal');
+  if (modal) modal.classList.remove('open');
+}
+
 function renderizarPreviewsFotos() {
-  const fotosAvarias = fotosVistoria.filter(f => f.categoria.includes('Avaria') || f.categoria === 'Avarias na Carroceria');
-  const fotosPneus = fotosVistoria.filter(f => f.categoria.includes('Pneu') || f.categoria === 'Pneus e Rodas');
+  const fotosAvarias = fotosVistoria.filter(f => (f.categoria || '').includes('Avaria'));
+  const fotosPneus = fotosVistoria.filter(f => (f.categoria || '').includes('Pneu'));
 
   const htmlItem = f => `
     <div class="photo-preview-item">
-      <img src="${f.dataUrl}" alt="${f.categoria}">
+      <img src="${f.dataUrl}" alt="${f.categoria}" onclick="abrirZoomFoto('${f.id}')">
       <span class="photo-tag">${f.categoria}</span>
-      <button type="button" class="btn-remove-photo" title="Remover Foto" onclick="removerFotoVistoria('${f.id}')">&times;</button>
+      <button type="button" class="btn-remove-photo" title="Remover Foto" aria-label="Remover foto" onclick="removerFotoVistoria('${f.id}')">&times;</button>
     </div>
   `;
 
@@ -2434,7 +2979,7 @@ function renderizarResumoRevisao() {
     `;
   }
 
-  const badgeLibColor = d.liberacao === 'Liberado' ? '#16a34a' : (d.liberacao === 'Liberado com Restrição' ? '#ca8a04' : (d.liberacao === 'Não Liberado' ? '#dc2626' : '#64748b'));
+  const badgeLibColor = d.liberacao === 'Liberado' ? '#16a34a' : (d.liberacao === 'Ressalva' || d.liberacao === 'Liberado com Restrição' ? '#ca8a04' : ((d.liberacao === 'Não liberado' || d.liberacao === 'Não Liberado') ? '#dc2626' : '#64748b'));
 
   container.innerHTML = `
     ${alertBoxHtml}
@@ -2505,7 +3050,6 @@ const vanSvg = document.getElementById('vanSvg');
 const vanMarksLayer = document.getElementById('vanMarksLayer');
 const undoBtn = document.getElementById('undoBtn');
 const semAvariasChk = document.getElementById('semAvariasChk');
-const progBar = document.getElementById('progBar');
 const contBadge = document.getElementById('contBadge');
 const avariasCount = document.getElementById('avariasCount');
 
@@ -2589,9 +3133,7 @@ function refreshProgresso() {
     it.classList.toggle('okk', val === 'OK');
   });
 
-  const perc = Math.round((respondidos / TOTAL_ITENS) * 100);
-  progBar.style.width = perc + '%';
-  contBadge.textContent = `${respondidos}/${TOTAL_ITENS} itens` + (nok ? ` · ${nok} Não OK` : '');
+  if (contBadge) contBadge.textContent = `${respondidos}/${TOTAL_ITENS} itens` + (nok ? ` · ${nok} Não OK` : '');
 }
 
 frm.addEventListener('change', () => {
@@ -2795,54 +3337,113 @@ sigCanvas.addEventListener('pointermove', e => {
 sigCanvas.addEventListener('pointerup', () => { isDrawing = false; });
 sigCanvas.addEventListener('pointercancel', () => { isDrawing = false; });
 
-// Rascunho Automático Seguro
-function salvarRascunho() {
+// Armazenamento seguro em localStorage (sem QuotaExceededError) + IndexedDB para fotos
+function safeLocalSet(key, valueStr) {
+  try {
+    localStorage.setItem(key, valueStr);
+    return true;
+  } catch (e) {
+    // Libera espaço do histórico local antes de tentar novamente
+    try {
+      const lista = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
+      if (Array.isArray(lista) && lista.length > 0) {
+        const enxuta = lista.slice(0, 3).map(item => ({
+          ...item,
+          ass_motorista: null,
+          ass_vistoriador: null,
+          ass_responsavel: null
+        }));
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(enxuta));
+        localStorage.setItem(key, valueStr);
+        return true;
+      }
+    } catch (e2) {}
+    return false;
+  }
+}
+
+function aplicarDadosRascunhoNoForm(d) {
+  if (!d || typeof d !== 'object') return;
+  for (const el of frm.elements) {
+    if (!el.name || !(el.name in d)) continue;
+    if (el.type === 'radio') {
+      el.checked = (el.value === d[el.name]);
+    } else if (el.type === 'checkbox') {
+      el.checked = !!d[el.name];
+    } else {
+      el.value = d[el.name] || '';
+    }
+  }
+
+  if (d.avarias && Array.isArray(d.avarias)) {
+    avarias = d.avarias;
+    renderAvarias();
+  }
+
+  ['ass_motorista', 'ass_vistoriador', 'ass_responsavel'].forEach(k => {
+    if (d[k]) {
+      assinaturas[k] = d[k];
+      const shortKey = k.replace('ass_', '');
+      const prevImg = document.getElementById(`prev_${shortKey}`);
+      const badge = document.getElementById(`badge_${shortKey}`);
+      const slot = document.getElementById(`slot_${shortKey}`);
+      if (prevImg) { prevImg.src = d[k]; prevImg.classList.remove('hidden'); }
+      if (badge) { badge.textContent = 'Assinado'; badge.style.color = '#15803d'; badge.style.fontWeight = '700'; }
+      if (slot) slot.classList.add('signed');
+    }
+  });
+
+  const isOutro = frm.querySelector('input[name=veiculo][value=Outro]')?.checked;
+  const boxOutro = document.getElementById('boxOutro');
+  if (boxOutro) boxOutro.style.display = isOutro ? 'block' : 'none';
+}
+
+// Rascunho Automático Seguro (campos leves no localStorage + fotos e assinaturas no IndexedDB)
+async function salvarRascunho() {
   try {
     const data = coletarDadosFormulario();
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+    data.etapaAtual = etapaAtual;
+    // Guarda completo no IndexedDB (incluindo fotosVistoria e assinaturas)
+    await gomexIDB.putRascunho({ ...data, fotosVistoria: fotosVistoria.slice() });
+
+    // Versão enxuta para localStorage (nunca estoura cota de 5MB)
+    const leve = { ...data };
+    if (!safeLocalSet(DRAFT_KEY, JSON.stringify(leve))) {
+      delete leve.ass_motorista;
+      delete leve.ass_vistoriador;
+      delete leve.ass_responsavel;
+      safeLocalSet(DRAFT_KEY, JSON.stringify(leve));
+    }
   } catch (e) {}
 }
 
-function restaurarRascunho() {
+async function restaurarRascunho() {
+  let etapaSalva = 1;
   try {
     const raw = localStorage.getItem(DRAFT_KEY);
-    if (!raw) return;
-    const d = JSON.parse(raw);
-
-    for (const el of frm.elements) {
-      if (!el.name || !(el.name in d)) continue;
-      if (el.type === 'radio') {
-        el.checked = (el.value === d[el.name]);
-      } else if (el.type === 'checkbox') {
-        el.checked = !!d[el.name];
-      } else {
-        el.value = d[el.name] || '';
-      }
+    if (raw) {
+      const d = JSON.parse(raw);
+      aplicarDadosRascunhoNoForm(d);
+      if (d.etapaAtual) etapaSalva = Number(d.etapaAtual) || 1;
     }
-
-    if (d.avarias && Array.isArray(d.avarias)) {
-      avarias = d.avarias;
-      renderAvarias();
-    }
-
-    ['ass_motorista', 'ass_vistoriador', 'ass_responsavel'].forEach(k => {
-      if (d[k]) {
-        assinaturas[k] = d[k];
-        const shortKey = k.replace('ass_', '');
-        const prevImg = document.getElementById(`prev_${shortKey}`);
-        const badge = document.getElementById(`badge_${shortKey}`);
-        const slot = document.getElementById(`slot_${shortKey}`);
-        if (prevImg) { prevImg.src = d[k]; prevImg.classList.remove('hidden'); }
-        if (badge) { badge.textContent = 'Assinado'; badge.style.color = '#15803d'; badge.style.fontWeight = '700'; badge.style.color = '#15803d'; badge.style.fontWeight = '700'; }
-        if (slot) slot.classList.add('signed');
-      }
-    });
-
-    const isOutro = frm.querySelector('input[name=veiculo][value=Outro]')?.checked;
-    document.getElementById('boxOutro').style.display = isOutro ? 'block' : 'none';
-
-    refreshProgresso();
   } catch (e) {}
+
+  try {
+    const idbDraft = await gomexIDB.getRascunho();
+    if (idbDraft) {
+      aplicarDadosRascunhoNoForm(idbDraft);
+      if (Array.isArray(idbDraft.fotosVistoria) && idbDraft.fotosVistoria.length > 0) {
+        fotosVistoria = idbDraft.fotosVistoria;
+        renderizarPreviewsFotos();
+      }
+      if (idbDraft.etapaAtual) etapaSalva = Number(idbDraft.etapaAtual) || etapaSalva;
+    }
+  } catch (e) {}
+
+  if (etapaSalva > 1 && etapaSalva <= TOTAL_ETAPAS) {
+    irParaEtapa(etapaSalva, false);
+  }
+  refreshProgresso();
 }
 
 // Coleta de Dados do Formulário
@@ -3319,7 +3920,7 @@ function atualizarStatusRotaUI() {
 
 async function carregarMapaRotasVendedores() {
   try {
-    const res = await fetch('/api/checklists', { cache: 'no-store' });
+    const res = await fetch(apiUrl('/api/checklists'), { cache: 'no-store' });
     if (!res.ok) return;
     const rows = await res.json();
     if (!Array.isArray(rows)) return;
@@ -3382,7 +3983,7 @@ async function sincronizarRotaNoPainel() {
 
   atualizarStatusRotaUI('<span class="spinner-sm"></span> Salvando rota...', 'syncing');
   try {
-    const res = await fetch('/api/checklists', {
+    const res = await fetch(apiUrl('/api/checklists'), {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ motorista, placa, rota })
@@ -3474,8 +4075,9 @@ document.getElementById('btnSalvar').addEventListener('click', async () => {
 
   // 1. Envia para a API segura no backend (obtém o número sequencial real gravado no Supabase)
   let numeroOficial = null;
+  let salvoNoBanco = false;
   try {
-    const res = await fetch('/api/checklists', {
+    const res = await fetch(apiUrl('/api/checklists'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(registro)
@@ -3485,6 +4087,7 @@ document.getElementById('btnSalvar').addEventListener('click', async () => {
       if (respData && respData.numero) {
         numeroOficial = respData.numero;
         registro.numero = numeroOficial;
+        salvoNoBanco = !respData.cached;
       }
     }
   } catch (err) {
@@ -3493,40 +4096,60 @@ document.getElementById('btnSalvar').addEventListener('click', async () => {
 
   // Fallback seguro caso esteja sem internet no momento
   if (!numeroOficial) {
-    const localList = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
-    numeroOficial = String(localList.length + 1).padStart(6, '0');
+    try {
+      const localList = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
+      numeroOficial = String(localList.length + 1).padStart(6, '0');
+    } catch (e) {
+      numeroOficial = String(Date.now()).slice(-6);
+    }
     registro.numero = numeroOficial;
   }
 
-  // 2. Salva no cache local (garantia que nada se perde)
+  // 2. Salva no cache local (limitado e seguro, sem estourar armazenamento)
   salvarNoCacheLocal(registro);
 
-  // Sincroniza fotos anexadas com a Galeria de Veículos do Painel Executivo
+  // Sincroniza fotos anexadas com a Galeria de Veículos do Painel Executivo em lotes leves
+  let fotosEnviadasCount = 0;
+  let fotosPendentesCount = 0;
   if (fotosVistoria && fotosVistoria.length > 0) {
-    try {
-      btnSalvar.innerHTML = '<span class="spinner-sm"></span> Salvando fotos da vistoria...';
-      const resFotos = await fetch('/api/fotos-galeria', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          placa: registro.placa,
-          veiculo: registro.veiculo,
-          motorista: registro.motorista,
-          data: registro.data,
-          km: registro.km,
-          numero: numeroOficial,
-          fotos: fotosVistoria.map(f => ({
-            categoria: f.categoria,
-            dataUrl: f.dataUrl,
-            obs: 'Check-list Nº ' + numeroOficial + ' (' + f.categoria + ')'
-          }))
-        })
-      });
-      const dataFotos = await resFotos.json();
-      console.log('Fotos sincronizadas na galeria:', dataFotos);
-    } catch (fotoErr) {
-      console.warn('Aviso: Falha ao sincronizar fotos na galeria (offline):', fotoErr);
+    const veiculoNome = (registro.veiculo === 'Outro' && registro.veiculo_outro)
+      ? registro.veiculo_outro
+      : registro.veiculo;
+    const lotes = [];
+    for (let i = 0; i < fotosVistoria.length; i += 4) {
+      lotes.push(fotosVistoria.slice(i, i + 4));
     }
+
+    for (let b = 0; b < lotes.length; b++) {
+      btnSalvar.innerHTML = `<span class="spinner-sm"></span> Enviando fotos (${b + 1}/${lotes.length})...`;
+      const lotePayload = {
+        placa: registro.placa,
+        veiculo: veiculoNome,
+        motorista: registro.motorista,
+        data: registro.data,
+        km: registro.km,
+        numero: numeroOficial,
+        fotos: lotes[b].map(f => ({
+          id: f.id,
+          categoria: f.categoria,
+          dataUrl: f.dataUrl,
+          ts: f.ts,
+          obs: 'Check-list Nº ' + numeroOficial + ' (' + f.categoria + ')'
+        }))
+      };
+      const okLote = await enviarLoteFotosGaleria(lotePayload);
+      if (okLote) {
+        fotosEnviadasCount += lotes[b].length;
+      } else {
+        fotosPendentesCount += lotes[b].length;
+        await gomexIDB.putFila({
+          id: 'fila_' + Date.now() + '_' + b + '_' + Math.random().toString(36).slice(2, 6),
+          payload: lotePayload,
+          criadoEm: Date.now()
+        });
+      }
+    }
+    await atualizarBannerFotosOffline();
   }
 
   // 3. Gera o PDF Oficial com o número REAL do Supabase
@@ -3544,18 +4167,90 @@ document.getElementById('btnSalvar').addEventListener('click', async () => {
   btnSalvar.innerHTML = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> <span>Salvar Check-list & Gerar PDF</span>';
 
   try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+  await gomexIDB.clearRascunho();
 
   document.getElementById('successTitle').textContent = `Check-list Nº ${numeroOficial} Salvo!`;
-  document.getElementById('successSubtitle').textContent = `Vistoria ${registro.placa} registrada com sucesso no Supabase com o Nº oficial ${numeroOficial}.`;
+  let subMsg = salvoNoBanco
+    ? `Vistoria ${registro.placa} registrada no sistema com o Nº oficial ${numeroOficial}.`
+    : `Vistoria ${registro.placa} salva localmente com o Nº ${numeroOficial}.`;
+  if (fotosEnviadasCount > 0) {
+    subMsg += ` ${fotosEnviadasCount} foto(s) sincronizada(s) com o painel.`;
+  }
+  if (fotosPendentesCount > 0) {
+    subMsg += ` ${fotosPendentesCount} foto(s) ficaram na fila offline para reenvio automático.`;
+    mostrarNotificacao(`${fotosPendentesCount} foto(s) aguardando conexão para envio ao painel.`, 'warning', 5000);
+  }
+  document.getElementById('successSubtitle').textContent = subMsg;
 
   document.getElementById('successModal').classList.add('open');
 });
 
+async function enviarLoteFotosGaleria(payload) {
+  try {
+    const res = await fetch(apiUrl('/api/fotos-galeria'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    return Boolean(data && data.success);
+  } catch (e) {
+    return false;
+  }
+}
+
+async function atualizarBannerFotosOffline() {
+  const banner = document.getElementById('offlinePhotosBanner');
+  const txt = document.getElementById('offlinePhotosTxt');
+  if (!banner) return;
+  const itens = await gomexIDB.getAllFila();
+  if (itens.length > 0) {
+    const totalFotos = itens.reduce((acc, it) => acc + ((it.payload && Array.isArray(it.payload.fotos)) ? it.payload.fotos.length : 0), 0);
+    if (txt) txt.textContent = `${totalFotos} foto(s) aguardando conexão para chegar ao painel.`;
+    banner.classList.add('show');
+  } else {
+    banner.classList.remove('show');
+  }
+}
+
+async function reenviarFotosPendentes(manual = false) {
+  const itens = await gomexIDB.getAllFila();
+  if (!itens.length) {
+    await atualizarBannerFotosOffline();
+    return;
+  }
+  let enviadas = 0;
+  for (const item of itens) {
+    const ok = await enviarLoteFotosGaleria(item.payload);
+    if (ok) {
+      await gomexIDB.delFila(item.id);
+      enviadas += (item.payload && Array.isArray(item.payload.fotos)) ? item.payload.fotos.length : 1;
+    }
+  }
+  await atualizarBannerFotosOffline();
+  if (manual) {
+    const restantes = await gomexIDB.getAllFila();
+    if (!restantes.length) {
+      mostrarNotificacao(`${enviadas} foto(s) pendente(s) enviada(s) para o painel!`, 'success');
+    } else {
+      mostrarNotificacao('Ainda sem conexão com o servidor. As fotos continuam salvas com segurança.', 'warning');
+    }
+  }
+}
+
 function salvarNoCacheLocal(item) {
   try {
-    const lista = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
+    let lista = [];
+    try { lista = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]'); } catch (e) { lista = []; }
+    if (!Array.isArray(lista)) lista = [];
     lista.unshift(item);
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(lista));
+    // Mantém no máximo 10 checklists e remove imagens de assinatura pesadas após os 3 mais recentes
+    lista = lista.slice(0, 10).map((entry, idx) => {
+      if (idx < 3) return entry;
+      return { ...entry, ass_motorista: null, ass_vistoriador: null, ass_responsavel: null };
+    });
+    safeLocalSet(LOCAL_STORAGE_KEY, JSON.stringify(lista));
   } catch (e) {}
 }
 
@@ -3595,28 +4290,34 @@ function limparFormulario() {
   });
   setarDataHoraAtual();
   setarDataHero();
-
-// Listeners para captura de fotos de pneus e avarias
-['inpFotoCamera', 'inpFotoGaleria'].forEach(id => {
-  const el = document.getElementById(id);
-  if (el) {
-    el.addEventListener('change', async function() {
-      if (this.files && this.files.length) {
-        await onFotosSelecionadas(this.files);
-        this.value = '';
-      }
-    });
-  }
-});
-
-irParaEtapa(1, false);
-  refreshProgresso();
-  try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
   fotosVistoria = [];
   renderizarPreviewsFotos();
+  refreshProgresso();
+  try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+  gomexIDB.clearRascunho();
   irParaEtapa(1, false);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+// Listeners de captura de câmera e galeria (registrados uma única vez na inicialização)
+function inicializarCapturasFoto() {
+  ['inpFotoCamera', 'inpFotoGaleria'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && !el.dataset.bound) {
+      el.dataset.bound = '1';
+      el.addEventListener('change', async function() {
+        if (this.files && this.files.length) {
+          await onFotosSelecionadas(this.files);
+          try { this.value = ''; } catch (e) {}
+        }
+      });
+    }
+  });
+}
+inicializarCapturasFoto();
+
+window.addEventListener('pagehide', pararStreamCamera);
+window.addEventListener('online', () => { reenviarFotosPendentes(false); });
 
 document.getElementById('btnLimpar').addEventListener('click', () => {
   if (confirm('Deseja limpar todos os campos preenchidos?')) {
@@ -3677,7 +4378,9 @@ function setarDataHoraAtual() {
 
 setarDataHoraAtual();
 setarDataHero();
-restaurarRascunho();
+restaurarRascunho().then(() => {
+  reenviarFotosPendentes(false);
+});
 carregarMapaRotasVendedores().then(() => {
   const rVal = document.getElementById('rota')?.value.trim();
   if (rVal) {
