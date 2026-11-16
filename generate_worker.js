@@ -233,80 +233,115 @@ export default {
           });
         }
       }
+    }
 
-      // POST /api/fotos-galeria (Salvar fotos da vistoria diretamente na galeria do painel)
-      if (url.pathname === '/api/fotos-galeria' && request.method === 'POST') {
-        try {
-          const payload = await request.json();
-          const fotos = Array.isArray(payload.fotos) ? payload.fotos : [];
-          if (!fotos.length) {
-            return new Response(JSON.stringify({ success: true, count: 0 }), {
-              status: 200,
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-            });
-          }
-
-          // 1. Obter galeria atual do Supabase (tabela parametros)
-          const getRes = await fetch(\`\${supabaseUrl}/rest/v1/parametros?id=eq.frota_galeria_veiculos_v1&select=*\`, {
-            headers: {
-              'apikey': supabaseKey,
-              'Authorization': \`Bearer \${supabaseKey}\`,
-              'Content-Type': 'application/json'
-            }
+    // 4. ROTA DE FOTOS DA GALERIA (/api/fotos-galeria) — fora de /api/checklists!
+    if (url.pathname === '/api/fotos-galeria' && request.method === 'POST') {
+      const supabaseUrl = (env && env.SUPABASE_URL) || 'https://lhjeodmnqwsftifdvaru.supabase.co';
+      const supabaseKey = getSupabaseKey(env);
+      try {
+        const payload = await request.json();
+        const fotosRaw = Array.isArray(payload.fotos) ? payload.fotos : [];
+        const fotosValidas = fotosRaw.filter(f => f && typeof (f.dataUrl || f.imagem) === 'string' && (f.dataUrl || f.imagem).startsWith('data:image/'));
+        if (!fotosValidas.length) {
+          return new Response(JSON.stringify({ success: true, count: 0 }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
-          let galeriaAtual = [];
-          if (getRes.ok) {
-            const rows = await getRes.json();
-            if (Array.isArray(rows) && rows[0]?.descricao) {
-              try { galeriaAtual = JSON.parse(rows[0].descricao) || []; } catch(e) {}
-            }
-          }
+        }
 
-          // 2. Prepend das novas fotos da vistoria
-          const baseTs = Date.now();
-          const novasFotos = fotos.map((f, idx) => ({
-            id: 'foto_chk_' + (baseTs + idx) + '_' + Math.random().toString(36).slice(2, 6),
-            created_ts: baseTs + idx,
+        const normalizarCat = (c) => {
+          const s = String(c || '').trim();
+          if (/avaria/i.test(s)) return 'Avaria / Carroceria';
+          if (/pneu/i.test(s)) return 'Pneus / Calibragem';
+          return s || 'Estado Geral / Vistoria';
+        };
+
+        // 1. Obter galeria atual do Supabase (tabela parametros)
+        const getRes = await fetch(\`\${supabaseUrl}/rest/v1/parametros?id=eq.frota_galeria_veiculos_v1&select=*\`, {
+          headers: {
+            'apikey': supabaseKey,
+            'Authorization': \`Bearer \${supabaseKey}\`,
+            'Content-Type': 'application/json'
+          }
+        });
+        let galeriaAtual = [];
+        if (getRes.ok) {
+          const rows = await getRes.json();
+          if (Array.isArray(rows) && rows[0]?.descricao) {
+            try {
+              const parsed = JSON.parse(rows[0].descricao);
+              if (Array.isArray(parsed)) galeriaAtual = parsed;
+            } catch (e) {}
+          }
+        }
+
+        // 2. Prepend das novas fotos da vistoria com deduplicação por id
+        const baseTs = Date.now();
+        const idsExistentes = new Set(galeriaAtual.map(x => String(x?.id || '')));
+        const novasFotos = [];
+        fotosValidas.forEach((f, idx) => {
+          const fotoId = String(f.id || ('foto_chk_' + (baseTs + idx) + '_' + Math.random().toString(36).slice(2, 6)));
+          if (idsExistentes.has(fotoId)) return;
+          idsExistentes.add(fotoId);
+          novasFotos.push({
+            id: fotoId,
+            created_ts: Number(f.ts) || (baseTs + idx),
             placa: (f.placa || payload.placa || '').toUpperCase().trim(),
             veiculo: f.veiculo || payload.veiculo || 'Veículo da Frota',
             data: f.data || payload.data || new Date().toISOString().split('T')[0],
             motorista: f.motorista || payload.motorista || 'Vistoriador',
-            categoria: f.categoria || 'Vistoria / Pneus e Avarias',
+            categoria: normalizarCat(f.categoria),
             km: f.km || payload.km || null,
             obs: f.obs || ('Check-list Nº ' + (payload.numero || 'Oficial')),
             imagem: f.dataUrl || f.imagem,
             registrado_por: 'Check-list App (' + (f.motorista || payload.motorista || 'Motorista') + ')'
-          }));
-
-          const galeriaAtualizada = [...novasFotos, ...galeriaAtual];
-          if (galeriaAtualizada.length > 200) galeriaAtualizada.length = 200;
-
-          // 3. Upsert no Supabase
-          await fetch(\`\${supabaseUrl}/rest/v1/parametros\`, {
-            method: 'POST',
-            headers: {
-              'apikey': supabaseKey,
-              'Authorization': \`Bearer \${supabaseKey}\`,
-              'Content-Type': 'application/json',
-              'Prefer': 'resolution=merge-duplicates'
-            },
-            body: JSON.stringify({
-              id: 'frota_galeria_veiculos_v1',
-              valor: galeriaAtualizada.length,
-              descricao: JSON.stringify(galeriaAtualizada)
-            })
           });
+        });
 
-          return new Response(JSON.stringify({ success: true, count: novasFotos.length }), {
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          });
-        } catch (err) {
-          return new Response(JSON.stringify({ error: err.message }), {
-            status: 500,
+        let galeriaAtualizada = [...novasFotos, ...galeriaAtual];
+        if (galeriaAtualizada.length > 200) galeriaAtualizada.length = 200;
+
+        // Mantém o payload abaixo do limite seguro (8.5 MB) removendo itens mais antigos se necessário
+        let serialized = JSON.stringify(galeriaAtualizada);
+        while (serialized.length > 8500000 && galeriaAtualizada.length > novasFotos.length) {
+          galeriaAtualizada.pop();
+          serialized = JSON.stringify(galeriaAtualizada);
+        }
+
+        // 3. Upsert no Supabase e validação real de resposta
+        const upsertRes = await fetch(\`\${supabaseUrl}/rest/v1/parametros\`, {
+          method: 'POST',
+          headers: {
+            'apikey': supabaseKey,
+            'Authorization': \`Bearer \${supabaseKey}\`,
+            'Content-Type': 'application/json',
+            'Prefer': 'resolution=merge-duplicates,return=representation'
+          },
+          body: JSON.stringify({
+            id: 'frota_galeria_veiculos_v1',
+            valor: galeriaAtualizada.length,
+            descricao: serialized
+          })
+        });
+
+        if (!upsertRes.ok) {
+          const errDetail = await upsertRes.text().catch(() => '');
+          return new Response(JSON.stringify({ success: false, error: 'Erro Supabase (' + upsertRes.status + '): ' + errDetail.slice(0, 200) }), {
+            status: 502,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
         }
+
+        return new Response(JSON.stringify({ success: true, count: novasFotos.length, total: galeriaAtualizada.length }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({ success: false, error: err.message }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
       }
     }
 
