@@ -226,63 +226,114 @@ const server = http.createServer(async (req, res) => {
   // POST /api/fotos-galeria (Salvar fotos da vistoria diretamente na galeria do painel)
   if (pathname === '/api/fotos-galeria' && req.method === 'POST') {
     let body = '';
-    req.on('data', chunk => body += chunk);
+    let bodySize = 0;
+    let aborted = false;
+    req.on('data', chunk => {
+      bodySize += chunk.length;
+      if (bodySize > 25 * 1024 * 1024) {
+        aborted = true;
+        res.writeHead(413, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: 'Lote de fotos excedeu 25 MB' }));
+        req.destroy();
+        return;
+      }
+      body += chunk;
+    });
     req.on('end', async () => {
+      if (aborted) return;
       try {
         const payload = JSON.parse(body || '{}');
-        const fotos = Array.isArray(payload.fotos) ? payload.fotos : [];
-        if (!fotos.length) {
+        const fotosRaw = Array.isArray(payload.fotos) ? payload.fotos : [];
+        const fotosValidas = fotosRaw.filter(f => f && typeof (f.dataUrl || f.imagem) === 'string' && (f.dataUrl || f.imagem).startsWith('data:image/'));
+        if (!fotosValidas.length) {
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ success: true, count: 0 }));
           return;
         }
 
+        const normalizarCat = (c) => {
+          const s = String(c || '').trim();
+          if (/avaria/i.test(s)) return 'Avaria / Carroceria';
+          if (/pneu/i.test(s)) return 'Pneus / Calibragem';
+          return s || 'Estado Geral / Vistoria';
+        };
+
         // 1. Obter galeria atual do Supabase (tabela parametros)
         const getRes = await supabaseRequest('/rest/v1/parametros?id=eq.frota_galeria_veiculos_v1&select=*');
         let galeriaAtual = [];
         if (getRes.status >= 200 && getRes.status < 300 && Array.isArray(getRes.data) && getRes.data[0]?.descricao) {
-          try { galeriaAtual = JSON.parse(getRes.data[0].descricao) || []; } catch(e) {}
+          try {
+            const parsed = JSON.parse(getRes.data[0].descricao);
+            if (Array.isArray(parsed)) galeriaAtual = parsed;
+          } catch (e) {}
         }
 
-        // 2. Prepend das novas fotos da vistoria
+        // 2. Prepend das novas fotos da vistoria com deduplicação por id
         const baseTs = Date.now();
-        const novasFotos = fotos.map((f, idx) => ({
-          id: 'foto_chk_' + (baseTs + idx) + '_' + Math.random().toString(36).slice(2, 6),
-          created_ts: baseTs + idx,
-          placa: (f.placa || payload.placa || '').toUpperCase().trim(),
-          veiculo: f.veiculo || payload.veiculo || 'Veículo da Frota',
-          data: f.data || payload.data || new Date().toISOString().split('T')[0],
-          motorista: f.motorista || payload.motorista || 'Vistoriador',
-          categoria: f.categoria || 'Vistoria / Pneus e Avarias',
-          km: f.km || payload.km || null,
-          obs: f.obs || ('Check-list Nº ' + (payload.numero || 'Oficial')),
-          imagem: f.dataUrl || f.imagem,
-          registrado_por: 'Check-list App (' + (f.motorista || payload.motorista || 'Motorista') + ')'
-        }));
-
-        const galeriaAtualizada = [...novasFotos, ...galeriaAtual];
-        if (galeriaAtualizada.length > 200) galeriaAtualizada.length = 200;
-
-        // 3. Upsert no Supabase
-        await supabaseRequest('/rest/v1/parametros', 'POST', {
-          id: 'frota_galeria_veiculos_v1',
-          valor: galeriaAtualizada.length,
-          descricao: JSON.stringify(galeriaAtualizada)
+        const idsExistentes = new Set(galeriaAtual.map(x => String(x?.id || '')));
+        const novasFotos = [];
+        fotosValidas.forEach((f, idx) => {
+          const fotoId = String(f.id || ('foto_chk_' + (baseTs + idx) + '_' + Math.random().toString(36).slice(2, 6)));
+          if (idsExistentes.has(fotoId)) return;
+          idsExistentes.add(fotoId);
+          novasFotos.push({
+            id: fotoId,
+            created_ts: Number(f.ts) || (baseTs + idx),
+            placa: (f.placa || payload.placa || '').toUpperCase().trim(),
+            veiculo: f.veiculo || payload.veiculo || 'Veículo da Frota',
+            data: f.data || payload.data || new Date().toISOString().split('T')[0],
+            motorista: f.motorista || payload.motorista || 'Vistoriador',
+            categoria: normalizarCat(f.categoria),
+            km: f.km || payload.km || null,
+            obs: f.obs || ('Check-list Nº ' + (payload.numero || 'Oficial')),
+            imagem: f.dataUrl || f.imagem,
+            registrado_por: 'Check-list App (' + (f.motorista || payload.motorista || 'Motorista') + ')'
+          });
         });
 
+        let galeriaAtualizada = [...novasFotos, ...galeriaAtual];
+        if (galeriaAtualizada.length > 200) galeriaAtualizada.length = 200;
+
+        let serialized = JSON.stringify(galeriaAtualizada);
+        while (Buffer.byteLength(serialized, 'utf8') > 8500000 && galeriaAtualizada.length > novasFotos.length) {
+          galeriaAtualizada.pop();
+          serialized = JSON.stringify(galeriaAtualizada);
+        }
+
+        // 3. Upsert no Supabase e validação da resposta
+        const upsertRes = await supabaseRequest('/rest/v1/parametros', 'POST', {
+          id: 'frota_galeria_veiculos_v1',
+          valor: galeriaAtualizada.length,
+          descricao: serialized
+        });
+
+        if (upsertRes.status < 200 || upsertRes.status >= 300) {
+          res.writeHead(502, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, error: 'Erro Supabase (' + upsertRes.status + ')' }));
+          return;
+        }
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: true, count: novasFotos.length }));
+        res.end(JSON.stringify({ success: true, count: novasFotos.length, total: galeriaAtualizada.length }));
       } catch (err) {
         console.error('Erro ao salvar fotos da vistoria na galeria:', err);
         res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: err.message }));
+        res.end(JSON.stringify({ success: false, error: err.message }));
       }
     });
     return;
   }
 
-  // --- SERVIÇO DE ARQUIVOS ESTÁTICOS ---
-  let filePath = path.join(__dirname, pathname === '/' ? 'index.html' : pathname);
+  // --- SERVIÇO SEGURO DE ARQUIVOS ESTÁTICOS (bloqueia .env, dotfiles e scripts internos) ---
+  const BLOCKED_FILES = new Set(['server.js', 'worker.js', 'wrangler.toml', 'wrangler.json', 'package.json', 'package-lock.json', '.env', 'generate_worker.js', 'push_to_github.mjs', 'validate.mjs', 'schema.sql']);
+  const safeRel = pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, '');
+  const resolvedBase = path.resolve(__dirname);
+  let filePath = path.resolve(__dirname, safeRel);
+  const baseName = path.basename(filePath);
+
+  if (!filePath.startsWith(resolvedBase) || BLOCKED_FILES.has(baseName) || baseName.startsWith('.') || !fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
+    filePath = path.join(resolvedBase, 'index.html');
+  }
 
   fs.readFile(filePath, (err, content) => {
     if (err) {
