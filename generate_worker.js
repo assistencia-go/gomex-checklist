@@ -174,7 +174,20 @@ export default {
       if (request.method === 'POST') {
         try {
           const payload = await request.json();
-          if (!payload.numero || payload.numero === 'AUTO') {
+          const vNm = String(payload.veiculo || '').trim();
+          const voNm = String(payload.veiculo_outro || '').trim();
+          const plNm = String(payload.placa || '').trim();
+          const motNm = String(payload.motorista || '').trim();
+          const numRaw = String(payload.numero || '').trim().toUpperCase();
+          const stRaw = String(payload.status || '').trim().toLowerCase();
+          const isTeste = stRaw === 'teste' || numRaw.startsWith('TESTE') || new RegExp('\\\\bteste\\\\b', 'i').test(vNm) || new RegExp('\\\\bteste\\\\b', 'i').test(voNm) || /^teste/i.test(plNm) || /^teste$/i.test(motNm);
+
+          if (isTeste) {
+            if (!numRaw.startsWith('TESTE')) {
+              payload.numero = 'TESTE-' + String(Date.now()).slice(-5);
+            }
+            payload.status = 'teste';
+          } else if (!payload.numero || payload.numero === 'AUTO') {
             delete payload.numero;
           }
 
@@ -189,7 +202,7 @@ export default {
             body: JSON.stringify(payload)
           });
 
-          if (payload.rota && payload.motorista) {
+          if (!isTeste && payload.rota && payload.motorista) {
             fetch(\`\${supabaseUrl}/rest/v1/veiculo_checklists?motorista=ilike.\${encodeURIComponent(String(payload.motorista).trim())}\`, {
               method: 'PATCH',
               headers: {
