@@ -159,15 +159,22 @@ try {
   const resTest = await workerObj.fetch(reqTest, {}, {});
   const resJson = await resTest.json();
   const upsertCall = workerCalls.find(c => c.method === 'POST' && c.url.includes('/rest/v1/parametros'));
-  if (!resJson.success || resJson.count !== 1 || !upsertCall) {
-    throw new Error(`Worker /api/fotos-galeria nao salvou no Supabase: ${JSON.stringify(resJson)}`);
+  if (!resJson.success || resJson.count !== 1 || resJson.mode !== 'granular' || !upsertCall) {
+    throw new Error(`Worker /api/fotos-galeria nao salvou granularmente no Supabase: ${JSON.stringify(resJson)}`);
   }
-  const savedPayload = JSON.parse(upsertCall.body);
-  const savedGallery = JSON.parse(savedPayload.descricao);
-  if (savedGallery[0].categoria !== 'Pneus / Calibragem' || savedGallery[0].placa !== 'ABC1D23') {
-    throw new Error(`Formato incompativel com painel: ${JSON.stringify(savedGallery[0])}`);
+  const savedRows = JSON.parse(upsertCall.body);
+  if (!Array.isArray(savedRows) || savedRows.length !== 1 || !String(savedRows[0].id || '').startsWith('frota_rec:galeria:')) {
+    throw new Error(`Worker /api/fotos-galeria violou politica granular (deve gravar frota_rec:galeria:<id>): ${upsertCall.body}`);
   }
-  logPass('Rota /api/fotos-galeria no worker.js validada ponta-a-ponta (chega no Supabase no formato do painel).');
+  const savedFoto = JSON.parse(savedRows[0].descricao);
+  if (savedFoto.categoria !== 'Pneus / Calibragem' || savedFoto.placa !== 'ABC1D23' || savedFoto.vistoria_numero !== '000999') {
+    throw new Error(`Formato incompativel com painel: ${JSON.stringify(savedFoto)}`);
+  }
+  const serverSrcCheck = fs.readFileSync(path.join(__dirname, 'server.js'), 'utf8');
+  if (workerSrc.includes("id: 'frota_galeria_veiculos_v1'") || serverSrcCheck.includes("id: 'frota_galeria_veiculos_v1'")) {
+    throw new Error('BLOQUEIO: worker.js ou server.js esta tentando reescrever o blob legado frota_galeria_veiculos_v1!');
+  }
+  logPass('Rota /api/fotos-galeria no worker.js e server.js validada ponta-a-ponta (persistencia granular frota_rec:galeria:<id>, proibido blob monolitico).');
 } catch (err) {
   logFail(`Falha na validacao da rota /api/fotos-galeria do worker: ${err.message}`);
   hasError = true;
