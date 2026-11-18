@@ -202,7 +202,28 @@ try {
   if (workerSrc.includes("id: 'frota_galeria_veiculos_v1'") || serverSrcCheck.includes("id: 'frota_galeria_veiculos_v1'")) {
     throw new Error('BLOQUEIO: worker.js ou server.js esta tentando reescrever o blob legado frota_galeria_veiculos_v1!');
   }
-  logPass('Rota /api/fotos-galeria no worker.js e server.js validada (Storage frota-galeria + fallback dataUrl + persistencia granular).');
+
+  // Caso 3: Modo Teste (veiculo "Teste") nao pode enviar numero='AUTO' nem consumir sequencial do Supabase!
+  const reqTesteChecklist = {
+    url: 'https://gomex-checklist.gomexassistencia2026.workers.dev/api/checklists',
+    method: 'POST',
+    json: async () => ({
+      numero: 'AUTO',
+      veiculo: 'Outro',
+      veiculo_outro: 'Teste',
+      placa: 'TST0001',
+      motorista: 'Teste Gestor',
+      km: 100
+    })
+  };
+  await workerObj.fetch(reqTesteChecklist, {}, {});
+  const chkPostCall = workerCalls.find(c => c.method === 'POST' && c.url.includes('/rest/v1/veiculo_checklists'));
+  const chkPayload = chkPostCall ? JSON.parse(chkPostCall.body) : null;
+  if (!chkPayload || !String(chkPayload.numero || '').startsWith('TESTE-') || chkPayload.status !== 'teste') {
+    throw new Error('Modo Teste no /api/checklists falhou (numero=' + chkPayload?.numero + ', status=' + chkPayload?.status + ')');
+  }
+
+  logPass('Rota /api/fotos-galeria (Storage + fallback) e Modo Teste em /api/checklists validados ponta-a-ponta.');
 } catch (err) {
   logFail(`Falha na validacao da rota /api/fotos-galeria do worker: ${err.message}`);
   hasError = true;
