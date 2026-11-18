@@ -186,17 +186,29 @@ const server = http.createServer(async (req, res) => {
     req.on('end', async () => {
       try {
         const payload = JSON.parse(body);
+        const vNm = String(payload.veiculo || '').trim();
+        const voNm = String(payload.veiculo_outro || '').trim();
+        const plNm = String(payload.placa || '').trim();
+        const motNm = String(payload.motorista || '').trim();
+        const numRaw = String(payload.numero || '').trim().toUpperCase();
+        const stRaw = String(payload.status || '').trim().toLowerCase();
+        const isTeste = stRaw === 'teste' || numRaw.startsWith('TESTE') || /\bteste\b/i.test(vNm) || /\bteste\b/i.test(voNm) || /^teste/i.test(plNm) || /^teste$/i.test(motNm);
 
-        // Se o número for 'AUTO' ou provisório, remove para que o Supabase gere o sequencial oficial
-        if (!payload.numero || payload.numero === 'AUTO') {
+        // Em modo Teste, preserva TESTE-xxx para nao acionar o trigger checklist_numero_seq no Postgres
+        if (isTeste) {
+          if (!numRaw.startsWith('TESTE')) {
+            payload.numero = 'TESTE-' + String(Date.now()).slice(-5);
+          }
+          payload.status = 'teste';
+        } else if (!payload.numero || payload.numero === 'AUTO') {
           delete payload.numero;
         }
 
         // Envia para o Supabase com autenticação segura
         const response = await supabaseRequest('/rest/v1/veiculo_checklists', 'POST', payload);
 
-        // Se o vendedor informou sua rota, atualiza também os registros anteriores dele no banco
-        if (payload.rota && payload.motorista) {
+        // Se o vendedor informou sua rota (e nao for teste), atualiza também os registros anteriores dele no banco
+        if (!isTeste && payload.rota && payload.motorista) {
           supabaseRequest(
             `/rest/v1/veiculo_checklists?motorista=ilike.${encodeURIComponent(String(payload.motorista).trim())}`,
             'PATCH',
