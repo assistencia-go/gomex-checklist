@@ -90,8 +90,9 @@ async function pushFile(fileName) {
         }
       } catch (e) {}
 
+      const customMsg = (process.env.COMMIT_MSG || '').trim();
       const payload = {
-        message: `feat(checklist): tornar fotos de carroceria e pneus obrigatorias (${fileName})`,
+        message: customMsg ? `${customMsg} (${fileName})` : `fix(checklist): gravacao granular de fotos (frota_rec:galeria) e vinculo vistoria_numero (${fileName})`,
         content: base64Content,
         branch: 'main'
       };
