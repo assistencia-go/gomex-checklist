@@ -1537,8 +1537,9 @@
           <label><input type="radio" name="veiculo" value="Outro"><span>Outro</span></label>
         </div>
         <div id="boxOutro" style="margin-top:10px;display:none;">
-          <input type="text" name="veiculo_outro" id="veiculoOutro" placeholder="Qual o veículo? (Ex: Fiorino, Sprinter)">
+          <input type="text" name="veiculo_outro" id="veiculoOutro" placeholder="Qual o veículo? (Ex: Fiorino, Sprinter ou Teste)">
         </div>
+        <div id="badgeModoTeste" style="display:none;margin-top:8px;padding:7px 10px;border-radius:8px;background:#fef3c7;border:1px solid #f59e0b;color:#92400e;font-size:12px;font-weight:700;">Modo Teste ativo: não consome Nº oficial de vistoria e será isolado dos relatórios.</div>
       </div>
 
       <div class="two-cols">
@@ -3161,13 +3162,37 @@ const avariasCount = document.getElementById('avariasCount');
 
 
 
+function isChecklistTesteMode(veic, veicOutro, placa, motorista) {
+  const v = String(veic || '').trim();
+  const vo = String(veicOutro || '').trim();
+  const pl = String(placa || '').trim();
+  const mot = String(motorista || '').trim();
+  return /\bteste\b/i.test(v) || /\bteste\b/i.test(vo) || /^teste/i.test(pl) || /^teste$/i.test(mot);
+}
+
+function atualizarBadgeModoTeste() {
+  const badge = document.getElementById('badgeModoTeste');
+  if (!badge) return;
+  const checked = frm.querySelector('input[name=veiculo]:checked');
+  const veic = checked ? checked.value : '';
+  const outro = document.getElementById('veiculoOutro')?.value || '';
+  const pl = document.getElementById('placa')?.value || '';
+  const mot = document.getElementById('motorista')?.value || '';
+  badge.style.display = isChecklistTesteMode(veic, outro, pl, mot) ? 'block' : 'none';
+}
+
 // Controle de Veículo Outro
 document.querySelectorAll('input[name=veiculo]').forEach(r => {
   r.addEventListener('change', () => {
     const isOutro = frm.querySelector('input[name=veiculo][value=Outro]').checked;
     document.getElementById('boxOutro').style.display = isOutro ? 'block' : 'none';
+    atualizarBadgeModoTeste();
     salvarRascunho();
   });
+});
+['veiculoOutro', 'placa', 'motorista'].forEach(elId => {
+  const el = document.getElementById(elId);
+  if (el) el.addEventListener('input', atualizarBadgeModoTeste);
 });
 
 // Avarias na Carroceria (SVG Touch & Click)
@@ -3502,6 +3527,7 @@ function aplicarDadosRascunhoNoForm(d) {
   const isOutro = frm.querySelector('input[name=veiculo][value=Outro]')?.checked;
   const boxOutro = document.getElementById('boxOutro');
   if (boxOutro) boxOutro.style.display = isOutro ? 'block' : 'none';
+  atualizarBadgeModoTeste();
 }
 
 // Rascunho Automático Seguro (campos leves no localStorage + fotos e assinaturas no IndexedDB)
@@ -4160,8 +4186,11 @@ document.getElementById('btnSalvar').addEventListener('click', async () => {
   btnSalvar.disabled = true;
   btnSalvar.innerHTML = '<span class="spinner-sm"></span> Gravando vistoria no banco...';
 
+  const modoTeste = isChecklistTesteMode(d.veiculo, d.veiculo_outro, d.placa, d.motorista);
+  const numTesteGerado = modoTeste ? ('TESTE-' + String(Date.now()).slice(-5)) : null;
+
   const registro = {
-    numero: 'AUTO',
+    numero: numTesteGerado || 'AUTO',
     veiculo: d.veiculo,
     veiculo_outro: d.veiculo_outro || null,
     placa: (d.placa || '').toUpperCase().trim(),
@@ -4190,7 +4219,7 @@ document.getElementById('btnSalvar').addEventListener('click', async () => {
     ass_motorista: d.ass_motorista,
     ass_vistoriador: d.ass_vistoriador,
     ass_responsavel: d.ass_responsavel,
-    status: 'concluido'
+    status: modoTeste ? 'teste' : 'concluido'
   };
 
   // 1. Envia para a API segura no backend (obtém o número sequencial real gravado no Supabase)
@@ -4216,11 +4245,15 @@ document.getElementById('btnSalvar').addEventListener('click', async () => {
 
   // Fallback seguro caso esteja sem internet no momento
   if (!numeroOficial) {
-    try {
-      const localList = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
-      numeroOficial = String(localList.length + 1).padStart(6, '0');
-    } catch (e) {
-      numeroOficial = String(Date.now()).slice(-6);
+    if (numTesteGerado) {
+      numeroOficial = numTesteGerado;
+    } else {
+      try {
+        const localList = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
+        numeroOficial = String(localList.length + 1).padStart(6, '0');
+      } catch (e) {
+        numeroOficial = String(Date.now()).slice(-6);
+      }
     }
     registro.numero = numeroOficial;
   }
@@ -4410,6 +4443,9 @@ function limparFormulario() {
   });
   setarDataHoraAtual();
   setarDataHero();
+  const boxOutroReset = document.getElementById('boxOutro');
+  if (boxOutroReset) boxOutroReset.style.display = 'none';
+  atualizarBadgeModoTeste();
   fotosVistoria = [];
   renderizarPreviewsFotos();
   refreshProgresso();
