@@ -166,15 +166,43 @@ try {
   if (!Array.isArray(savedRows) || savedRows.length !== 1 || !String(savedRows[0].id || '').startsWith('frota_rec:galeria:')) {
     throw new Error(`Worker /api/fotos-galeria violou politica granular (deve gravar frota_rec:galeria:<id>): ${upsertCall.body}`);
   }
+  const storageUploadCall = workerCalls.find(c => c.method === 'POST' && c.url.includes('/storage/v1/object/frota-galeria/'));
   const savedFoto = JSON.parse(savedRows[0].descricao);
-  if (savedFoto.categoria !== 'Pneus / Calibragem' || savedFoto.placa !== 'ABC1D23' || savedFoto.vistoria_numero !== '000999') {
-    throw new Error(`Formato incompativel com painel: ${JSON.stringify(savedFoto)}`);
+  if (
+    !storageUploadCall ||
+    savedFoto.categoria !== 'Pneus / Calibragem' ||
+    savedFoto.placa !== 'ABC1D23' ||
+    savedFoto.vistoria_numero !== '000999' ||
+    !String(savedFoto.imagem || '').includes('/storage/v1/object/public/frota-galeria/')
+  ) {
+    throw new Error(`Worker /api/fotos-galeria nao enviou para Storage frota-galeria ou formato incompativel: ${JSON.stringify(savedFoto)}`);
   }
+
+  // Caso 2: Se Storage falhar (503), deve preservar dataUrl no fallback sem perder foto!
+  const workerCallsFallback = [];
+  const workerObjFallback = vm.runInNewContext(transformed, {
+    ...workerCtx,
+    fetch: async (url, opts = {}) => {
+      workerCallsFallback.push({ url: String(url), method: opts.method || 'GET', body: opts.body });
+      if (String(url).includes('/storage/v1/')) {
+        return { ok: false, status: 503, text: async () => 'Storage offline' };
+      }
+      return { ok: true, status: 200, json: async () => ([]), text: async () => '[]' };
+    }
+  });
+  const resFallback = await workerObjFallback.fetch(reqTest, {}, {});
+  const jsonFallback = await resFallback.json();
+  const upsertFallback = workerCallsFallback.find(c => c.method === 'POST' && c.url.includes('/rest/v1/parametros'));
+  const savedFallback = upsertFallback ? JSON.parse(JSON.parse(upsertFallback.body)[0].descricao) : null;
+  if (!jsonFallback.success || !savedFallback || !String(savedFallback.imagem || '').startsWith('data:image/')) {
+    throw new Error('Fallback sem Storage falhou — foto nao pode ser perdida quando Storage estiver indisponivel.');
+  }
+
   const serverSrcCheck = fs.readFileSync(path.join(__dirname, 'server.js'), 'utf8');
   if (workerSrc.includes("id: 'frota_galeria_veiculos_v1'") || serverSrcCheck.includes("id: 'frota_galeria_veiculos_v1'")) {
     throw new Error('BLOQUEIO: worker.js ou server.js esta tentando reescrever o blob legado frota_galeria_veiculos_v1!');
   }
-  logPass('Rota /api/fotos-galeria no worker.js e server.js validada ponta-a-ponta (persistencia granular frota_rec:galeria:<id>, proibido blob monolitico).');
+  logPass('Rota /api/fotos-galeria no worker.js e server.js validada (Storage frota-galeria + fallback dataUrl + persistencia granular).');
 } catch (err) {
   logFail(`Falha na validacao da rota /api/fotos-galeria do worker: ${err.message}`);
   hasError = true;
