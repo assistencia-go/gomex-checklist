@@ -267,14 +267,78 @@ const server = http.createServer(async (req, res) => {
         const baseTs = Date.now();
         const nowIso = new Date(baseTs).toISOString();
         const vistoriaNum = String(payload.numero || '').trim();
+        const bucketName = 'frota-galeria';
         const idsVistos = new Set();
-        const rowsToUpsert = [];
+        const fotosUnicas = [];
 
         fotosValidas.forEach((f, idx) => {
           const fotoId = String(f.id || ('foto_chk_' + (baseTs + idx) + '_' + Math.random().toString(36).slice(2, 6))).trim();
           if (!fotoId || idsVistos.has(fotoId)) return;
           idsVistos.add(fotoId);
+          fotosUnicas.push({ f, idx, fotoId });
+        });
+
+        const ensureBucketLocal = async () => {
+          try {
+            const rGet = await fetch(SUPABASE_URL + '/storage/v1/bucket/' + bucketName, {
+              headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+            });
+            if (rGet.ok) return true;
+            const rCr = await fetch(SUPABASE_URL + '/storage/v1/bucket', {
+              method: 'POST',
+              headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id: bucketName, name: bucketName, public: true })
+            });
+            return Boolean(rCr.ok || rCr.status === 409);
+          } catch (e) {
+            return false;
+          }
+        };
+
+        const uploadParaStorageLocal = async (fotoId, rawUrl, dataIso) => {
+          const m = String(rawUrl || '').match(/^data:(image\/(?:jpeg|jpg|png|webp|gif));base64,([A-Za-z0-9+/=\r\n]+)$/i);
+          if (!m) return { imagem: rawUrl };
+          const rawMime = m[1].toLowerCase();
+          const mime = rawMime === 'image/jpg' ? 'image/jpeg' : rawMime;
+          const extMap = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' };
+          const ext = extMap[mime] || 'jpg';
+          const bytes = new Uint8Array(Buffer.from(m[2].replace(/\s+/g, ''), 'base64'));
+          const fm = String(dataIso || '').match(/^(\d{4}-\d{2})/);
+          const folder = fm ? fm[1] : nowIso.slice(0, 7);
+          const safeId = fotoId.replace(/[^A-Za-z0-9._-]/g, '_');
+          const objectPath = folder + '/' + safeId + '.' + ext;
+          const objEndpoint = SUPABASE_URL + '/storage/v1/object/' + bucketName + '/' + objectPath;
+          const hdrs = {
+            'apikey': SUPABASE_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_KEY,
+            'Content-Type': mime,
+            'Cache-Control': '31536000',
+            'x-upsert': 'true'
+          };
+          try {
+            let rUp = await fetch(objEndpoint, { method: 'POST', headers: hdrs, body: bytes });
+            if (!rUp.ok && (rUp.status === 400 || rUp.status === 404)) {
+              if (await ensureBucketLocal()) {
+                rUp = await fetch(objEndpoint, { method: 'POST', headers: hdrs, body: bytes });
+              }
+            }
+            if (!rUp.ok) return { imagem: rawUrl };
+            return {
+              imagem: SUPABASE_URL + '/storage/v1/object/public/' + bucketName + '/' + objectPath,
+              storage_bucket: bucketName,
+              storage_path: objectPath,
+              storage_migrated_at: nowIso
+            };
+          } catch (e) {
+            return { imagem: rawUrl };
+          }
+        };
+
+        const rowsToUpsert = await Promise.all(fotosUnicas.map(async ({ f, idx, fotoId }) => {
           const createdTs = Number(f.ts) || (baseTs + idx);
+          const fotoData = f.data || payload.data || nowIso.split('T')[0];
+          const rawImg = f.dataUrl || f.imagem;
+          const stored = await uploadParaStorageLocal(fotoId, rawImg, fotoData);
           const rec = {
             id: fotoId,
             _id: fotoId,
@@ -283,21 +347,22 @@ const server = http.createServer(async (req, res) => {
             created_ts: createdTs,
             placa: (f.placa || payload.placa || '').toUpperCase().trim(),
             veiculo: f.veiculo || payload.veiculo || 'Veículo da Frota',
-            data: f.data || payload.data || nowIso.split('T')[0],
+            data: fotoData,
             motorista: f.motorista || payload.motorista || 'Vistoriador',
             categoria: normalizarCat(f.categoria),
             km: f.km || payload.km || null,
             vistoria_numero: vistoriaNum || String(f.numero || '').trim(),
             obs: f.obs || ('Check-list Nº ' + (vistoriaNum || 'Oficial')),
-            imagem: f.dataUrl || f.imagem,
+            imagem: stored.imagem,
+            ...(stored.storage_bucket ? { storage_bucket: stored.storage_bucket, storage_path: stored.storage_path, storage_migrated_at: stored.storage_migrated_at } : {}),
             registrado_por: 'Check-list App (' + (f.motorista || payload.motorista || 'Motorista') + ')'
           };
-          rowsToUpsert.push({
+          return {
             id: 'frota_rec:galeria:' + fotoId,
             valor: createdTs,
             descricao: JSON.stringify(rec)
-          });
-        });
+          };
+        }));
 
         // Gravação granular direta por ID (payload leve, sem sobrescrita concorrente)
         const upsertRes = await supabaseRequest('/rest/v1/parametros', 'POST', rowsToUpsert);
