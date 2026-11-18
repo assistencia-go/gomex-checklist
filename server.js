@@ -224,6 +224,12 @@ const server = http.createServer(async (req, res) => {
   }
 
   // POST /api/fotos-galeria (Salvar fotos da vistoria diretamente na galeria do painel)
+  // ==============================================================================
+  // DIRETRIZ PERMANENTE DE INTEGRIDADE (PROIBIDO REESCREVER BLOB MONOLÍTICO):
+  // Cada foto DEVE ser gravada individualmente com id 'frota_rec:galeria:<fotoId>'
+  // em parametros (persistência granular por registro), nunca sobrescrevendo o
+  // registro legado frota_galeria_veiculos_v1.
+  // ==============================================================================
   if (pathname === '/api/fotos-galeria' && req.method === 'POST') {
     let body = '';
     let bodySize = 0;
@@ -258,54 +264,43 @@ const server = http.createServer(async (req, res) => {
           return s || 'Estado Geral / Vistoria';
         };
 
-        // 1. Obter galeria atual do Supabase (tabela parametros)
-        const getRes = await supabaseRequest('/rest/v1/parametros?id=eq.frota_galeria_veiculos_v1&select=*');
-        let galeriaAtual = [];
-        if (getRes.status >= 200 && getRes.status < 300 && Array.isArray(getRes.data) && getRes.data[0]?.descricao) {
-          try {
-            const parsed = JSON.parse(getRes.data[0].descricao);
-            if (Array.isArray(parsed)) galeriaAtual = parsed;
-          } catch (e) {}
-        }
-
-        // 2. Prepend das novas fotos da vistoria com deduplicação por id
         const baseTs = Date.now();
-        const idsExistentes = new Set(galeriaAtual.map(x => String(x?.id || '')));
-        const novasFotos = [];
+        const nowIso = new Date(baseTs).toISOString();
+        const vistoriaNum = String(payload.numero || '').trim();
+        const idsVistos = new Set();
+        const rowsToUpsert = [];
+
         fotosValidas.forEach((f, idx) => {
-          const fotoId = String(f.id || ('foto_chk_' + (baseTs + idx) + '_' + Math.random().toString(36).slice(2, 6)));
-          if (idsExistentes.has(fotoId)) return;
-          idsExistentes.add(fotoId);
-          novasFotos.push({
+          const fotoId = String(f.id || ('foto_chk_' + (baseTs + idx) + '_' + Math.random().toString(36).slice(2, 6))).trim();
+          if (!fotoId || idsVistos.has(fotoId)) return;
+          idsVistos.add(fotoId);
+          const createdTs = Number(f.ts) || (baseTs + idx);
+          const rec = {
             id: fotoId,
-            created_ts: Number(f.ts) || (baseTs + idx),
+            _id: fotoId,
+            _updated_at: nowIso,
+            updated_at: nowIso,
+            created_ts: createdTs,
             placa: (f.placa || payload.placa || '').toUpperCase().trim(),
             veiculo: f.veiculo || payload.veiculo || 'Veículo da Frota',
-            data: f.data || payload.data || new Date().toISOString().split('T')[0],
+            data: f.data || payload.data || nowIso.split('T')[0],
             motorista: f.motorista || payload.motorista || 'Vistoriador',
             categoria: normalizarCat(f.categoria),
             km: f.km || payload.km || null,
-            obs: f.obs || ('Check-list Nº ' + (payload.numero || 'Oficial')),
+            vistoria_numero: vistoriaNum || String(f.numero || '').trim(),
+            obs: f.obs || ('Check-list Nº ' + (vistoriaNum || 'Oficial')),
             imagem: f.dataUrl || f.imagem,
             registrado_por: 'Check-list App (' + (f.motorista || payload.motorista || 'Motorista') + ')'
+          };
+          rowsToUpsert.push({
+            id: 'frota_rec:galeria:' + fotoId,
+            valor: createdTs,
+            descricao: JSON.stringify(rec)
           });
         });
 
-        let galeriaAtualizada = [...novasFotos, ...galeriaAtual];
-        if (galeriaAtualizada.length > 200) galeriaAtualizada.length = 200;
-
-        let serialized = JSON.stringify(galeriaAtualizada);
-        while (Buffer.byteLength(serialized, 'utf8') > 8500000 && galeriaAtualizada.length > novasFotos.length) {
-          galeriaAtualizada.pop();
-          serialized = JSON.stringify(galeriaAtualizada);
-        }
-
-        // 3. Upsert no Supabase e validação da resposta
-        const upsertRes = await supabaseRequest('/rest/v1/parametros', 'POST', {
-          id: 'frota_galeria_veiculos_v1',
-          valor: galeriaAtualizada.length,
-          descricao: serialized
-        });
+        // Gravação granular direta por ID (payload leve, sem sobrescrita concorrente)
+        const upsertRes = await supabaseRequest('/rest/v1/parametros', 'POST', rowsToUpsert);
 
         if (upsertRes.status < 200 || upsertRes.status >= 300) {
           res.writeHead(502, { 'Content-Type': 'application/json' });
@@ -314,7 +309,7 @@ const server = http.createServer(async (req, res) => {
         }
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: true, count: novasFotos.length, total: galeriaAtualizada.length }));
+        res.end(JSON.stringify({ success: true, mode: 'granular', count: rowsToUpsert.length }));
       } catch (err) {
         console.error('Erro ao salvar fotos da vistoria na galeria:', err);
         res.writeHead(500, { 'Content-Type': 'application/json' });
