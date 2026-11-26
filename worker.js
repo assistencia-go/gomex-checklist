@@ -201,6 +201,25 @@ export default {
           const assignedNum = row?.numero || '000001';
 
           if (res.ok) {
+            if (!isTeste && row) {
+              const painelPushUrl = (env && env.PAINEL_PUSH_URL) || 'https://gomex-painel.gomexassistencia2026.workers.dev/api/push-send';
+              const pushPlaca = String(row.placa || payload.placa || 'Frota').trim();
+              const pushMot = String(row.motorista || payload.motorista || '').trim();
+              const pushLib = String(row.liberacao || payload.liberacao || 'Registrada').trim();
+              const pushEventId = 'vistoria-' + String(row.id || assignedNum);
+              const pushPromise = fetch(painelPushUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  title: 'Nova Vistoria Nº ' + assignedNum + ' (' + pushPlaca + ')',
+                  body: (pushMot ? ('Motorista: ' + pushMot + ' | ') : '') + 'Status: ' + pushLib,
+                  url: '/',
+                  tag: 'nova-' + pushEventId,
+                  eventId: pushEventId
+                })
+              }).catch(() => {});
+              if (ctx && typeof ctx.waitUntil === 'function') ctx.waitUntil(pushPromise);
+            }
             return new Response(JSON.stringify({
               success: true,
               numero: assignedNum,
